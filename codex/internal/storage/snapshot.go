@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"go-file-persistence/codex/internal/atomic"
+	"go-file-persistence/codex/internal/compression"
 	"go-file-persistence/codex/internal/encryption"
 	"go-file-persistence/codex/internal/integrity"
 )
@@ -19,7 +21,7 @@ func NewSnapshot(opts Options) (*Snapshot, error) {
 	return &Snapshot{opts: opts}, nil
 }
 
-// Load reads, decrypts, and verifies a data snapshot from disk.
+// Load reads, decompresses, decrypts, and verifies a data snapshot from disk.
 func (s *Snapshot) Load() (map[string][]byte, error) {
 	fileData, err := os.ReadFile(s.opts.Path)
 	if err != nil {
@@ -31,6 +33,14 @@ func (s *Snapshot) Load() (map[string][]byte, error) {
 		fileData, err = encryption.Decrypt(fileData, s.opts.EncryptionKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to decrypt snapshot: %w", err)
+		}
+	}
+
+	// Decompress if compression is enabled
+	if s.opts.Compression != compression.None {
+		fileData, err = compression.Decompress(fileData)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decompress snapshot: %w", err)
 		}
 	}
 
@@ -48,7 +58,7 @@ func (s *Snapshot) Load() (map[string][]byte, error) {
 	return data, nil
 }
 
-// Persist signs, encrypts, and writes a data snapshot to disk.
+// Persist signs, compresses, encrypts, and writes a data snapshot to disk.
 func (s *Snapshot) Persist(req PersistRequest) error {
 	storeData, err := json.Marshal(req.Data)
 	if err != nil {
@@ -61,6 +71,14 @@ func (s *Snapshot) Persist(req PersistRequest) error {
 		return fmt.Errorf("failed to sign snapshot: %w", err)
 	}
 
+	// Compress if compression is enabled
+	if s.opts.Compression != compression.None {
+		signedData, err = compression.Compress(signedData, s.opts.Compression, s.opts.CompressionLevel)
+		if err != nil {
+			return fmt.Errorf("failed to compress snapshot: %w", err)
+		}
+	}
+
 	// Encrypt if a key is provided
 	if s.opts.EncryptionKey != nil {
 		signedData, err = encryption.Encrypt(signedData, s.opts.EncryptionKey)
@@ -69,7 +87,31 @@ func (s *Snapshot) Persist(req PersistRequest) error {
 		}
 	}
 
-	return os.WriteFile(s.opts.Path, signedData, 0644)
+	// Use atomic write to prevent corruption
+	return atomic.WriteFile(s.opts.Path, signedData, 0644)
+}
+
+// PersistBatch persists multiple operations atomically
+func (s *Snapshot) PersistBatch(reqs []PersistRequest) error {
+	if len(reqs) == 0 {
+		return nil
+	}
+
+	// For snapshot mode, we expect the last request to have the complete data
+	// All batch operations should result in a final data map
+	var finalData map[string][]byte
+	for _, req := range reqs {
+		if req.Data != nil {
+			finalData = req.Data
+		}
+	}
+
+	if finalData == nil {
+		return fmt.Errorf("batch persist requires final data map")
+	}
+
+	// Use the regular Persist method with the final data
+	return s.Persist(PersistRequest{Data: finalData})
 }
 
 // Close is a no-op for the snapshot storer.

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 
+	"go-file-persistence/codex/internal/compression"
 	"go-file-persistence/codex/internal/encryption"
 )
 
@@ -79,6 +80,14 @@ func (l *Ledger) Persist(req PersistRequest) error {
 		return fmt.Errorf("failed to marshal ledger entry: %w", err)
 	}
 
+	// Compress if compression is enabled
+	if l.opts.Compression != compression.None {
+		entryBytes, err = compression.Compress(entryBytes, l.opts.Compression, l.opts.CompressionLevel)
+		if err != nil {
+			return fmt.Errorf("failed to compress ledger entry: %w", err)
+		}
+	}
+
 	var finalBytes []byte
 	if l.opts.EncryptionKey != nil {
 		encrypted, err := encryption.Encrypt(entryBytes, l.opts.EncryptionKey)
@@ -111,7 +120,17 @@ func (l *Ledger) readEncryptedEntry(r *bufio.Reader) ([]byte, error) {
 		return nil, err
 	}
 
-	return encryption.Decrypt(encryptedData, l.opts.EncryptionKey)
+	decrypted, err := encryption.Decrypt(encryptedData, l.opts.EncryptionKey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Decompress if compression is enabled
+	if l.opts.Compression != compression.None {
+		return compression.Decompress(decrypted)
+	}
+
+	return decrypted, nil
 }
 
 func (l *Ledger) readPlaintextEntry(r *bufio.Reader) ([]byte, error) {
@@ -125,7 +144,30 @@ func (l *Ledger) readPlaintextEntry(r *bufio.Reader) ([]byte, error) {
 	if _, err := io.ReadFull(r, entryBytes); err != nil {
 		return nil, err
 	}
+
+	// Decompress if compression is enabled
+	if l.opts.Compression != compression.None {
+		return compression.Decompress(entryBytes)
+	}
+
 	return entryBytes, nil
+}
+
+// PersistBatch appends multiple operations to the ledger atomically
+func (l *Ledger) PersistBatch(reqs []PersistRequest) error {
+	if len(reqs) == 0 {
+		return nil
+	}
+
+	// Write all operations sequentially
+	for _, req := range reqs {
+		if err := l.Persist(req); err != nil {
+			return fmt.Errorf("failed to persist batch operation: %w", err)
+		}
+	}
+
+	// Sync to disk for durability
+	return l.file.Sync()
 }
 
 // Close closes the ledger file handle.

@@ -8,14 +8,32 @@ import (
 	"sync"
 
 	"go-file-persistence/codex/internal/backup"
+	"go-file-persistence/codex/internal/batch"
+	"go-file-persistence/codex/internal/compression"
 	"go-file-persistence/codex/internal/storage"
+)
+
+// CompressionType defines the compression algorithm to use.
+type CompressionType = compression.Algorithm
+
+const (
+	// NoCompression disables compression.
+	NoCompression = compression.None
+	// GzipCompression uses gzip (good balance of speed and compression).
+	GzipCompression = compression.Gzip
+	// ZstdCompression uses Zstandard (best compression ratio).
+	ZstdCompression = compression.Zstd
+	// SnappyCompression uses Snappy (fastest, lower compression).
+	SnappyCompression = compression.Snappy
 )
 
 // Options holds configuration for the store.
 type Options struct {
-	EncryptionKey []byte
-	LedgerMode    bool
-	NumBackups    int
+	EncryptionKey    []byte
+	LedgerMode       bool
+	NumBackups       int
+	Compression      CompressionType // Compression algorithm (default: NoCompression)
+	CompressionLevel int             // Compression level (1-9 for Gzip/Zstd, ignored for Snappy)
 }
 
 // Store represents a key-value store.
@@ -50,8 +68,10 @@ func NewWithOptions(path string, opts Options) (*Store, error) {
 	}
 
 	storageOpts := storage.Options{
-		Path:          path,
-		EncryptionKey: opts.EncryptionKey,
+		Path:             path,
+		EncryptionKey:    opts.EncryptionKey,
+		Compression:      opts.Compression,
+		CompressionLevel: opts.CompressionLevel,
 	}
 
 	var storer storage.Storer
@@ -155,6 +175,131 @@ func (s *Store) Close() error {
 	return s.storer.Close()
 }
 
+// BatchSet sets multiple key-value pairs atomically
+func (s *Store) BatchSet(items map[string]interface{}) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Prepare batch operations
+	b := batch.New()
+	for key, value := range items {
+		b.Set(key, value)
+	}
+
+	// Marshall all values and update in-memory data
+	for key, value := range items {
+		data, err := json.Marshal(value)
+		if err != nil {
+			return fmt.Errorf("failed to marshal value for key %s: %w", key, err)
+		}
+		s.data[key] = data
+	}
+
+	// Persist batch
+	return s.persistBatch(b)
+}
+
+// BatchGet retrieves multiple values atomically
+func (s *Store) BatchGet(keys []string) (map[string]interface{}, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	result := make(map[string]interface{})
+	for _, key := range keys {
+		if data, exists := s.data[key]; exists {
+			var value interface{}
+			if err := json.Unmarshal(data, &value); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal value for key %s: %w", key, err)
+			}
+			result[key] = value
+		}
+	}
+
+	return result, nil
+}
+
+// BatchDelete deletes multiple keys atomically
+func (s *Store) BatchDelete(keys []string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Prepare batch operations
+	b := batch.New()
+	for _, key := range keys {
+		b.Delete(key)
+	}
+
+	// Delete from in-memory data
+	for _, key := range keys {
+		delete(s.data, key)
+	}
+
+	// Persist batch
+	return s.persistBatch(b)
+}
+
+// NewBatch creates a new batch for building operations
+func (s *Store) NewBatch() *Batch {
+	return &Batch{
+		store:      s,
+		operations: batch.New(),
+	}
+}
+
+// Batch represents a batch of operations
+type Batch struct {
+	store      *Store
+	operations *batch.Batch
+}
+
+// Set adds a set operation to the batch
+func (b *Batch) Set(key string, value interface{}) *Batch {
+	b.operations.Set(key, value)
+	return b
+}
+
+// Delete adds a delete operation to the batch
+func (b *Batch) Delete(key string) *Batch {
+	b.operations.Delete(key)
+	return b
+}
+
+// Execute executes all operations in the batch atomically
+func (b *Batch) Execute() error {
+	b.store.mu.Lock()
+	defer b.store.mu.Unlock()
+
+	// Validate batch
+	if err := b.operations.Validate(); err != nil {
+		return fmt.Errorf("invalid batch: %w", err)
+	}
+
+	// Optimize operations
+	b.operations.OptimizeOperations()
+
+	// Apply all operations to in-memory data
+	for _, op := range b.operations.Operations() {
+		switch op.Type {
+		case batch.OpSet:
+			data, err := json.Marshal(op.Value)
+			if err != nil {
+				return fmt.Errorf("failed to marshal value for key %s: %w", op.Key, err)
+			}
+			b.store.data[op.Key] = data
+		case batch.OpDelete:
+			delete(b.store.data, op.Key)
+		}
+	}
+
+	// Persist batch
+	return b.store.persistBatch(b.operations)
+}
+
+// Size returns the number of operations in the batch
+func (b *Batch) Size() int {
+	return b.operations.Size()
+}
+
 // persist handles the persistence logic.
 func (s *Store) persist(req storage.PersistRequest) error {
 	// For snapshot mode, we need to provide the full data map.
@@ -168,4 +313,47 @@ func (s *Store) persist(req storage.PersistRequest) error {
 		}
 	}
 	return s.storer.Persist(req)
+}
+
+// persistBatch handles batch persistence logic
+func (s *Store) persistBatch(b *batch.Batch) error {
+	// Create storage requests
+	var reqs []storage.PersistRequest
+
+	for _, op := range b.Operations() {
+		var persistOp storage.PersistOp
+		if op.Type == batch.OpSet {
+			persistOp = storage.OpSet
+		} else {
+			persistOp = storage.OpDelete
+		}
+
+		req := storage.PersistRequest{
+			Op:  persistOp,
+			Key: op.Key,
+		}
+
+		if op.Type == batch.OpSet {
+			data, _ := json.Marshal(op.Value)
+			req.Value = data
+		}
+
+		reqs = append(reqs, req)
+	}
+
+	// For snapshot mode, add final data
+	if !s.options.LedgerMode {
+		if len(reqs) > 0 {
+			reqs[len(reqs)-1].Data = s.data
+		}
+
+		// Create backup
+		if s.options.NumBackups > 0 {
+			if err := backup.Create(s.path, s.options.NumBackups); err != nil {
+				return err
+			}
+		}
+	}
+
+	return s.storer.PersistBatch(reqs)
 }

@@ -18,27 +18,41 @@ make clean          # Clean build artifacts
 ## Build Targets
 
 ### `make build`
-Builds the CLI binary to `bin/codex-cli`.
+Builds the CLI binary and creates the `cdx` alias.
 
 ```bash
 make build
-# Output: bin/codex-cli
+# Output: bin/codex-cli and bin/cdx
+```
+
+Both `codex-cli` and `cdx` are identical binaries - `cdx` is just a shorter alias for convenience.
+
+**Usage:**
+
+```bash
+# Using the full name
+./bin/codex-cli --file=my.db get mykey
+
+# Using the short alias
+./bin/cdx --file=my.db get mykey
 ```
 
 ### `make build-all`
-Builds CLI and all example programs.
+Builds CLI (with alias) and all example programs.
 
 ```bash
 make build-all
-# Output: bin/codex-cli, bin/01_basic_usage, bin/02_complex_data, etc.
+# Output: bin/codex-cli, bin/cdx, bin/01_basic_usage, bin/02_complex_data, etc.
 ```
 
 ### `make install`
-Installs the CLI to `$GOPATH/bin`.
+Installs the CLI and alias to `$GOPATH/bin` for system-wide access.
 
 ```bash
 make install
-# codex-cli will be available system-wide
+# Both codex-cli and cdx will be available system-wide
+# You can use: codex-cli <command>
+# Or the alias: cdx <command>
 ```
 
 ## Test Targets

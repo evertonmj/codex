@@ -2,6 +2,8 @@ package storage
 
 import (
 	"encoding/json"
+
+	"go-file-persistence/codex/internal/compression"
 )
 
 // PersistOp defines the type of operation for the ledger.
@@ -25,13 +27,16 @@ type PersistRequest struct {
 type Storer interface {
 	Load() (map[string][]byte, error)
 	Persist(req PersistRequest) error
+	PersistBatch(reqs []PersistRequest) error
 	Close() error
 }
 
 // Options holds configuration for a storage strategy.
 type Options struct {
-	Path          string
-	EncryptionKey []byte
+	Path             string
+	EncryptionKey    []byte
+	Compression      compression.Algorithm
+	CompressionLevel int
 }
 
 // ledgerEntry represents a single operation in the ledger.

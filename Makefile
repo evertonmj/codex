@@ -5,6 +5,7 @@
 
 # Variables
 BINARY_NAME=codex-cli
+BINARY_ALIAS=cdx
 BUILD_DIR=bin
 COVERAGE_DIR=coverage
 COVERAGE_FILE=$(COVERAGE_DIR)/coverage.out
@@ -27,11 +28,14 @@ help: ## Show this help message
 	@echo ""
 
 # Build targets
-build: ## Build the CLI binary
+build: ## Build the CLI binary (creates both codex-cli and cdx)
 	@echo "$(COLOR_BOLD)Building $(BINARY_NAME)...$(COLOR_RESET)"
 	@mkdir -p $(BUILD_DIR)
 	$(GO) build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/codex-cli
 	@echo "$(COLOR_GREEN)✓ Binary created at $(BUILD_DIR)/$(BINARY_NAME)$(COLOR_RESET)"
+	@echo "$(COLOR_BOLD)Creating alias $(BINARY_ALIAS)...$(COLOR_RESET)"
+	$(GO) build -o $(BUILD_DIR)/$(BINARY_ALIAS) ./cmd/codex-cli
+	@echo "$(COLOR_GREEN)✓ Alias created at $(BUILD_DIR)/$(BINARY_ALIAS)$(COLOR_RESET)"
 
 build-all: ## Build all binaries and examples
 	@echo "$(COLOR_BOLD)Building all binaries...$(COLOR_RESET)"
@@ -44,10 +48,17 @@ build-all: ## Build all binaries and examples
 	done
 	@echo "$(COLOR_GREEN)✓ All binaries built$(COLOR_RESET)"
 
-install: ## Install the CLI binary to GOPATH/bin
+install: ## Install the CLI binary and alias to GOPATH/bin
 	@echo "$(COLOR_BOLD)Installing $(BINARY_NAME)...$(COLOR_RESET)"
 	$(GO) install ./cmd/codex-cli
 	@echo "$(COLOR_GREEN)✓ Installed to $$(go env GOPATH)/bin/$(BINARY_NAME)$(COLOR_RESET)"
+	@echo "$(COLOR_BOLD)Creating alias $(BINARY_ALIAS)...$(COLOR_RESET)"
+	@cp $$(go env GOPATH)/bin/$(BINARY_NAME) $$(go env GOPATH)/bin/$(BINARY_ALIAS)
+	@echo "$(COLOR_GREEN)✓ Alias created at $$(go env GOPATH)/bin/$(BINARY_ALIAS)$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)You can now use either:$(COLOR_RESET)"
+	@echo "  • $(BINARY_NAME) <command>"
+	@echo "  • $(BINARY_ALIAS) <command>"
 
 # Test targets
 test: ## Run all tests

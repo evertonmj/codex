@@ -11,6 +11,10 @@
 # Output of the go coverage tool, specifically when run with the -o option
 *.out
 
+# Build artifacts
+bin/
+coverage/
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
@@ -20,9 +24,15 @@
 
 # Local database files
 *.db
+*.db.bak.*
+*.log
 
+# CLI binary
 codex-cli
-.claude/
-.DS_Store
 
+# System files
+.DS_Store
 *.DS_Store*
+
+# Claude
+.claude/

@@ -65,13 +65,13 @@ test-unit: ## Run unit tests only (exclude integration tests)
 
 test-integration: ## Run integration tests only
 	@echo "$(COLOR_BOLD)Running integration tests...$(COLOR_RESET)"
-	$(GO) test ./codex -run TestIntegration -v
+	$(GO) test ./tests -v
 	@echo "$(COLOR_GREEN)✓ Integration tests passed$(COLOR_RESET)"
 
 test-coverage: ## Run tests with coverage report
 	@echo "$(COLOR_BOLD)Running tests with coverage...$(COLOR_RESET)"
 	@mkdir -p $(COVERAGE_DIR)
-	$(GO) test ./... -coverprofile=$(COVERAGE_FILE)
+	$(GO) test ./codex/... ./tests -coverprofile=$(COVERAGE_FILE)
 	@echo ""
 	@echo "$(COLOR_BOLD)Coverage Summary:$(COLOR_RESET)"
 	@$(GO) tool cover -func=$(COVERAGE_FILE) | grep total

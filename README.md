@@ -3,7 +3,7 @@
 [![Go Version](https://img.shields.io/badge/go-1.20+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://mozilla.org/MPL/2.0/)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](#)
-[![Test Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](#)
+[![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](#)
 
 **CodexDB is a simple, fast, and persistent file-based key-value database for Go, with optional support for encryption, data integrity checks, automatic backups, and an append-only ledger mode.**
 
@@ -594,13 +594,14 @@ go test ./codex -run TestIntegration_Encryption
 
 ### Current Coverage
 
-- **Overall**: 95%+
-- **codex**: 95.5%
+- **Overall**: 90.3%
+- **codex**: 93.9%
 - **errors**: 100%
 - **logger**: 98.4%
 - **encryption**: 85%
 - **integrity**: 94.1%
 - **storage**: 80.9%
+- **backup**: 77.8%
 
 ## ⚡ Performance
 

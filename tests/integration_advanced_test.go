@@ -1,4 +1,4 @@
-package codex
+package tests
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"go-file-persistence/codex"
 )
 
 // TestIntegration_ErrorRecovery tests error handling and recovery scenarios
@@ -16,7 +18,7 @@ func TestIntegration_ErrorRecovery(t *testing.T) {
 
 	t.Run("recover from corrupted file - snapshot mode", func(t *testing.T) {
 		// Create a store and write some data
-		store, err := New(storePath)
+		store, err := codex.New(storePath)
 		if err != nil {
 			t.Fatalf("failed to create store: %v", err)
 		}
@@ -30,7 +32,7 @@ func TestIntegration_ErrorRecovery(t *testing.T) {
 		}
 
 		// Try to open the corrupted store
-		_, err = New(storePath)
+		_, err = codex.New(storePath)
 		if err == nil {
 			t.Fatal("expected error opening corrupted store")
 		}
@@ -38,7 +40,7 @@ func TestIntegration_ErrorRecovery(t *testing.T) {
 
 	t.Run("handle missing file gracefully", func(t *testing.T) {
 		nonExistentPath := filepath.Join(tmpDir, "nonexistent.db")
-		store, err := New(nonExistentPath)
+		store, err := codex.New(nonExistentPath)
 		if err != nil {
 			t.Fatalf("should create new store if file doesn't exist: %v", err)
 		}
@@ -55,7 +57,7 @@ func TestIntegration_LargeDataset(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "large.db")
 
-	store, err := New(storePath)
+	store, err := codex.New(storePath)
 	if err != nil {
 		t.Fatalf("failed to create store: %v", err)
 	}
@@ -120,7 +122,7 @@ func TestIntegration_ConcurrentAccess(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "concurrent.db")
 
-	store, err := New(storePath)
+	store, err := codex.New(storePath)
 	if err != nil {
 		t.Fatalf("failed to create store: %v", err)
 	}
@@ -173,8 +175,8 @@ func TestIntegration_BackupRotation(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "backup.db")
 
-	opts := Options{NumBackups: 3}
-	store, err := NewWithOptions(storePath, opts)
+	opts := codex.Options{NumBackups: 3}
+	store, err := codex.NewWithOptions(storePath, opts)
 	if err != nil {
 		t.Fatalf("failed to create store: %v", err)
 	}
@@ -213,7 +215,7 @@ func TestIntegration_EncryptionKeyRotation(t *testing.T) {
 
 	t.Run("migrate data between encryption keys", func(t *testing.T) {
 		// Create store with key1
-		store1, err := NewWithOptions(storePath1, Options{EncryptionKey: key1})
+		store1, err := codex.NewWithOptions(storePath1, codex.Options{EncryptionKey: key1})
 		if err != nil {
 			t.Fatalf("failed to create store1: %v", err)
 		}
@@ -231,8 +233,8 @@ func TestIntegration_EncryptionKeyRotation(t *testing.T) {
 		store1.Close()
 
 		// Read from key1 and write to key2
-		store1, _ = NewWithOptions(storePath1, Options{EncryptionKey: key1})
-		store2, _ := NewWithOptions(storePath2, Options{EncryptionKey: key2})
+		store1, _ = codex.NewWithOptions(storePath1, codex.Options{EncryptionKey: key1})
+		store2, _ := codex.NewWithOptions(storePath2, codex.Options{EncryptionKey: key2})
 
 		for _, key := range store1.Keys() {
 			var value string
@@ -244,7 +246,7 @@ func TestIntegration_EncryptionKeyRotation(t *testing.T) {
 		store2.Close()
 
 		// Verify data in store2
-		store2, _ = NewWithOptions(storePath2, Options{EncryptionKey: key2})
+		store2, _ = codex.NewWithOptions(storePath2, codex.Options{EncryptionKey: key2})
 		defer store2.Close()
 
 		for k, expectedValue := range testData {
@@ -264,11 +266,11 @@ func TestIntegration_LedgerReplay(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "ledger.db")
 
-	opts := Options{LedgerMode: true}
+	opts := codex.Options{LedgerMode: true}
 
 	t.Run("replay complex operation sequence", func(t *testing.T) {
 		// First session: perform operations
-		store1, err := NewWithOptions(storePath, opts)
+		store1, err := codex.NewWithOptions(storePath, opts)
 		if err != nil {
 			t.Fatalf("failed to create store: %v", err)
 		}
@@ -283,7 +285,7 @@ func TestIntegration_LedgerReplay(t *testing.T) {
 		store1.Close()
 
 		// Second session: verify replay
-		store2, err := NewWithOptions(storePath, opts)
+		store2, err := codex.NewWithOptions(storePath, opts)
 		if err != nil {
 			t.Fatalf("failed to reopen store: %v", err)
 		}
@@ -310,7 +312,7 @@ func TestIntegration_DataTypes(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "types.db")
 
-	store, err := New(storePath)
+	store, err := codex.New(storePath)
 	if err != nil {
 		t.Fatalf("failed to create store: %v", err)
 	}
@@ -399,7 +401,7 @@ func TestIntegration_DataTypes(t *testing.T) {
 
 	// Verify persistence
 	store.Close()
-	store, _ = New(storePath)
+	store, _ = codex.New(storePath)
 	defer store.Close()
 
 	if len(store.Keys()) != len(testCases) {
@@ -412,7 +414,7 @@ func TestIntegration_EdgeCases(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "edge.db")
 
-	store, err := New(storePath)
+	store, err := codex.New(storePath)
 	if err != nil {
 		t.Fatalf("failed to create store: %v", err)
 	}
@@ -508,7 +510,7 @@ func TestIntegration_StressTest(t *testing.T) {
 	tmpDir := t.TempDir()
 	storePath := filepath.Join(tmpDir, "stress.db")
 
-	store, err := New(storePath)
+	store, err := codex.New(storePath)
 	if err != nil {
 		t.Fatalf("failed to create store: %v", err)
 	}
@@ -545,12 +547,12 @@ func TestIntegration_MultipleStores(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	numStores := 5
-	stores := make([]*Store, numStores)
+	stores := make([]*codex.Store, numStores)
 
 	// Create multiple stores
 	for i := 0; i < numStores; i++ {
 		storePath := filepath.Join(tmpDir, fmt.Sprintf("store_%d.db", i))
-		store, err := New(storePath)
+		store, err := codex.New(storePath)
 		if err != nil {
 			t.Fatalf("failed to create store %d: %v", i, err)
 		}

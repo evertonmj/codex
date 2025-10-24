@@ -1,4 +1,4 @@
-package codex
+package tests
 
 import (
 	"os"
@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"go-file-persistence/codex"
 )
 
 func TestIntegration_SnapshotMode(t *testing.T) {
@@ -13,8 +15,8 @@ func TestIntegration_SnapshotMode(t *testing.T) {
 	storePath := filepath.Join(tempDir, "test.db")
 
 	// Test with backups
-	opts := Options{NumBackups: 3}
-	store, err := NewWithOptions(storePath, opts)
+	opts := codex.Options{NumBackups: 3}
+	store, err := codex.NewWithOptions(storePath, opts)
 	if err != nil {
 		t.Fatalf("NewWithOptions failed: %v", err)
 	}
@@ -40,7 +42,7 @@ func TestIntegration_SnapshotMode(t *testing.T) {
 	}
 
 	// Re-open and verify data
-	store2, err := NewWithOptions(storePath, opts)
+	store2, err := codex.NewWithOptions(storePath, opts)
 	if err != nil {
 		t.Fatalf("NewWithOptions for reload failed: %v", err)
 	}
@@ -58,8 +60,8 @@ func TestIntegration_LedgerMode(t *testing.T) {
 	storePath := filepath.Join(tempDir, "test.db")
 
 	// Test with ledger mode
-	opts := Options{LedgerMode: true}
-	store, err := NewWithOptions(storePath, opts)
+	opts := codex.Options{LedgerMode: true}
+	store, err := codex.NewWithOptions(storePath, opts)
 	if err != nil {
 		t.Fatalf("NewWithOptions failed: %v", err)
 	}
@@ -73,7 +75,7 @@ func TestIntegration_LedgerMode(t *testing.T) {
 	}
 
 	// Re-open and verify data
-	store2, err := NewWithOptions(storePath, opts)
+	store2, err := codex.NewWithOptions(storePath, opts)
 	if err != nil {
 		t.Fatalf("NewWithOptions for reload failed: %v", err)
 	}
@@ -92,8 +94,8 @@ func TestIntegration_Encryption(t *testing.T) {
 	key := make([]byte, 32)
 
 	// Test with encryption
-	opts := Options{EncryptionKey: key}
-	store, err := NewWithOptions(storePath, opts)
+	opts := codex.Options{EncryptionKey: key}
+	store, err := codex.NewWithOptions(storePath, opts)
 	if err != nil {
 		t.Fatalf("NewWithOptions failed: %v", err)
 	}
@@ -104,7 +106,7 @@ func TestIntegration_Encryption(t *testing.T) {
 	}
 
 	// Re-open with correct key
-	store2, err := NewWithOptions(storePath, opts)
+	store2, err := codex.NewWithOptions(storePath, opts)
 	if err != nil {
 		t.Fatalf("NewWithOptions for reload failed: %v", err)
 	}
@@ -123,7 +125,7 @@ func TestIntegration_Encryption(t *testing.T) {
 	// Re-open with wrong key
 	wrongKey := make([]byte, 32)
 	wrongKey[0] = 1 // make it different
-	_, err = NewWithOptions(storePath, Options{EncryptionKey: wrongKey})
+	_, err = codex.NewWithOptions(storePath, codex.Options{EncryptionKey: wrongKey})
 	if err == nil {
 		t.Fatal("Expected error when opening with wrong key, but got nil")
 	}

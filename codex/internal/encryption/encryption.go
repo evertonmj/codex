@@ -1,3 +1,27 @@
+// Package encryption provides AES-GCM encryption for protecting sensitive data.
+//
+// Encryption Details:
+//   - Algorithm: AES in GCM (Galois/Counter Mode) for authenticated encryption
+//   - Key sizes: 128-bit (16 bytes), 192-bit (24 bytes), 256-bit (32 bytes)
+//   - Authentication: AEAD (Authenticated Encryption with Associated Data)
+//   - Nonce: Random 12-byte nonce generated per encryption
+//
+// The encryption provides both confidentiality and authenticity, ensuring
+// that encrypted data cannot be modified without detection.
+//
+// Example:
+//
+//	key := []byte("32-byte-encryption-key-value...1")
+//	plaintext := []byte("secret data")
+//	ciphertext, err := encryption.Encrypt(plaintext, key)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	decrypted, err := encryption.Decrypt(ciphertext, key)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 package encryption
 
 import (

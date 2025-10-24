@@ -20,7 +20,7 @@ type Ledger struct {
 
 // NewLedger creates a new Ledger storer.
 func NewLedger(opts Options) (*Ledger, error) {
-	file, err := os.OpenFile(opts.Path, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(opts.Path, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open ledger file: %w", err)
 	}

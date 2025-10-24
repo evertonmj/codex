@@ -1,3 +1,23 @@
+// Package backup provides automatic rotating backup functionality
+// for disaster recovery and data protection.
+//
+// Backup Features:
+//   - Automatic backup creation before each snapshot write
+//   - Rotating backup retention (configurable count)
+//   - Named chronologically: .db.bak.1 (newest) to .db.bak.N (oldest)
+//   - Simple recovery by copying backup file
+//
+// Backup Rotation Example:
+//   With NumBackups=3, maintains:
+//   - my.db.bak.1 (most recent backup)
+//   - my.db.bak.2
+//   - my.db.bak.3 (oldest backup)
+//
+// When a new backup is created, .db.bak.3 is deleted and others
+// are renamed to maintain the rotation.
+//
+// Note: Backups only occur in snapshot mode. Ledger mode provides
+// natural recovery via log replay.
 package backup
 
 import (

@@ -74,7 +74,7 @@ func TestNewWithOptions(t *testing.T) {
 		}
 	})
 
-	t.Run("fails with ledger mode and encryption", func(t *testing.T) {
+	t.Run("works with ledger mode and encryption", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		storePath := filepath.Join(tmpDir, "test.db")
 
@@ -84,13 +84,29 @@ func TestNewWithOptions(t *testing.T) {
 			EncryptionKey: key,
 		}
 
-		_, err := NewWithOptions(storePath, opts)
-		if err == nil {
-			t.Fatal("expected error with ledger mode and encryption")
+		// Ledger mode with encryption should now work
+		store, err := NewWithOptions(storePath, opts)
+		if err != nil {
+			t.Fatalf("NewWithOptions() with ledger mode and encryption failed: %v", err)
+		}
+		defer store.Close()
+
+		if store == nil {
+			t.Fatal("expected store to be created")
 		}
 
-		if !strings.Contains(err.Error(), "not compatible") {
-			t.Errorf("expected compatibility error, got: %v", err)
+		// Verify we can use it
+		if err := store.Set("test", "value"); err != nil {
+			t.Fatalf("Set failed: %v", err)
+		}
+
+		var val string
+		if err := store.Get("test", &val); err != nil {
+			t.Fatalf("Get failed: %v", err)
+		}
+
+		if val != "value" {
+			t.Errorf("expected 'value', got %q", val)
 		}
 	})
 

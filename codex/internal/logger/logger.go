@@ -1,3 +1,20 @@
+// Package logger provides structured logging for database operations.
+//
+// Logging Features:
+//   - Structured JSON logging for machine parsing
+//   - Multiple log levels: Debug, Info, Warn, Error
+//   - File-based logging with append mode
+//   - Thread-safe concurrent access
+//   - Timestamp and level information
+//
+// Usage:
+//
+//	logger := logger.New("my-database.log", logger.LevelInfo)
+//	defer logger.Close()
+//	logger.Info("Database started", nil)
+//
+// Logs are appended to the specified file in JSON format for
+// easy parsing and analysis.
 package logger
 
 import (
@@ -56,7 +73,7 @@ func New(filePath string, level Level) (*Logger, error) {
 		return nil, fmt.Errorf("failed to create log directory: %w", err)
 	}
 
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %w", err)
 	}

@@ -1,3 +1,26 @@
+// Package errors defines custom error types for CodexDB operations.
+//
+// Error Types:
+//   - ErrorTypeValidation: Input validation failures
+//   - ErrorTypeNotFound: Key or resource not found
+//   - ErrorTypePermission: Permission denied
+//   - ErrorTypeIO: Input/output operation failure
+//   - ErrorTypeEncryption: Encryption/decryption failure
+//   - ErrorTypeIntegrity: Data integrity check failure
+//   - ErrorTypeConcurrency: Concurrent access issues
+//   - ErrorTypeInternal: Internal system errors
+//
+// Using error types:
+//
+//	var value string
+//	err := store.Get("key", &value)
+//	if errors.IsNotFoundError(err) {
+//	    // Key doesn't exist, handle gracefully
+//	    log.Println("Key not found")
+//	}
+//
+// Custom error types allow callers to handle different error
+// scenarios appropriately.
 package errors
 
 import (

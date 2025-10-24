@@ -88,7 +88,7 @@ func (s *Snapshot) Persist(req PersistRequest) error {
 	}
 
 	// Use atomic write to prevent corruption
-	return atomic.WriteFile(s.opts.Path, signedData, 0644)
+	return atomic.WriteFile(s.opts.Path, signedData, 0600)
 }
 
 // PersistBatch persists multiple operations atomically

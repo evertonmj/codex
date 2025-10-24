@@ -1,3 +1,20 @@
+// Package integrity provides data integrity verification using
+// SHA256 checksums to detect corruption.
+//
+// Integrity Protection:
+//   - All data is signed with SHA256 checksum before storage
+//   - Checksum is verified on load to detect corruption
+//   - Works with encrypted and unencrypted data
+//   - Detects bit flips, truncation, and modification
+//
+// Verification Process:
+//   1. Calculate SHA256 of data
+//   2. Create fileFormat with checksum and data
+//   3. Marshal to JSON and store
+//   4. On load, recalculate checksum and verify match
+//
+// Note: Checksum verification is transparent to the user and happens
+// automatically during database load.
 package integrity
 
 import (

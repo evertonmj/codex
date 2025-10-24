@@ -1,3 +1,14 @@
+// Package storage defines the persistence interface and implementations
+// for storing key-value data using different strategies.
+//
+// Supported storage modes:
+//   - Snapshot: Full database copy on each write (fast reads, O(n) writes)
+//   - Ledger: Append-only log (O(1) writes, full replay on load)
+//
+// Both modes support optional encryption and compression before persistence.
+//
+// The Storer interface allows pluggable storage implementations while
+// maintaining consistent semantics across different persistence strategies.
 package storage
 
 import (

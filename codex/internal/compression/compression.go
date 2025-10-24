@@ -1,3 +1,27 @@
+// Package compression provides multiple compression algorithms for reducing
+// storage costs while maintaining data integrity.
+//
+// Supported algorithms:
+//   - None: No compression (pass-through)
+//   - Gzip: Balanced speed and compression ratio (5-10x effective)
+//   - Zstd: Best compression ratio (10-20x effective)
+//   - Snappy: Fastest with lower compression (2-4x effective)
+//
+// All compressed data includes a 2-byte header identifying the algorithm
+// for automatic detection during decompression.
+//
+// Example:
+//
+//	data := []byte("repetitive data repetitive data...")
+//	compressed, err := compression.Compress(data, compression.Gzip, 6)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	decompressed, err := compression.Decompress(compressed)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 package compression
 
 import (

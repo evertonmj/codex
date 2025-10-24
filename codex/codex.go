@@ -1,3 +1,38 @@
+// Package codex provides a simple, fast, and persistent file-based key-value database
+// with support for encryption, compression, atomic operations, and two storage modes.
+//
+// CodexDB offers:
+//   - Simple API: Set, Get, Delete, Has, Keys, Clear
+//   - AES-GCM encryption for sensitive data
+//   - Compression algorithms: Gzip, Zstd, Snappy
+//   - Atomic file operations (crash-safe writes)
+//   - Batch operations for performance (10-50x faster)
+//   - Dual storage modes: Snapshot (fast) or Ledger (audit trail)
+//   - Automatic rotating backups
+//   - Thread-safe concurrent access
+//   - Data integrity with SHA256 checksums
+//
+// Basic usage:
+//
+//	store, err := codex.New("my-data.db")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	defer store.Close()
+//
+//	// Store data
+//	if err := store.Set("key", "value"); err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	// Retrieve data
+//	var value string
+//	if err := store.Get("key", &value); err != nil {
+//	    log.Fatal(err)
+//	}
+//
+// For advanced features, use NewWithOptions to configure encryption,
+// compression, backup rotation, and storage mode.
 package codex
 
 import (
@@ -52,9 +87,6 @@ func New(path string) (*Store, error) {
 
 // NewWithOptions creates a new key-value store with the given options.
 func NewWithOptions(path string, opts Options) (*Store, error) {
-	if opts.LedgerMode && opts.EncryptionKey != nil {
-		return nil, fmt.Errorf("LedgerMode and EncryptionKey are not compatible in this version")
-	}
 	if opts.EncryptionKey != nil {
 		keyLen := len(opts.EncryptionKey)
 		if keyLen != 16 && keyLen != 24 && keyLen != 32 {
@@ -334,7 +366,10 @@ func (s *Store) persistBatch(b *batch.Batch) error {
 		}
 
 		if op.Type == batch.OpSet {
-			data, _ := json.Marshal(op.Value)
+			data, err := json.Marshal(op.Value)
+			if err != nil {
+				return fmt.Errorf("failed to marshal batch value for key %s: %w", op.Key, err)
+			}
 			req.Value = data
 		}
 

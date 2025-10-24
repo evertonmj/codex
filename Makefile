@@ -68,6 +68,18 @@ test-integration: ## Run integration tests only
 	$(GO) test ./tests -v
 	@echo "$(COLOR_GREEN)✓ Integration tests passed$(COLOR_RESET)"
 
+test-examples: ## Run example tests to verify examples work
+	@echo "$(COLOR_BOLD)Running example tests...$(COLOR_RESET)"
+	@for dir in $(EXAMPLES_DIR)/*/; do \
+		if [ -f "$$dir/main_test.go" ]; then \
+			example=$$(basename $$dir); \
+			echo "  Testing $$example..."; \
+			cd $$dir && $(GO) test -v || exit 1; \
+			cd ../..; \
+		fi \
+	done
+	@echo "$(COLOR_GREEN)✓ All example tests passed$(COLOR_RESET)"
+
 test-coverage: ## Run tests with coverage report
 	@echo "$(COLOR_BOLD)Running tests with coverage...$(COLOR_RESET)"
 	@mkdir -p $(COVERAGE_DIR)
@@ -109,6 +121,45 @@ performance: ## Run performance tests (requires build tag)
 	@echo "$(COLOR_BOLD)Running performance tests...$(COLOR_RESET)"
 	$(GO) test -tags=performance -v ./codex -run Performance
 	@echo "$(COLOR_GREEN)✓ Performance tests complete$(COLOR_RESET)"
+
+performance-high-volume: ## Run high-volume performance tests with all features
+	@echo "$(COLOR_BOLD)Running high-volume performance tests...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)This may take several minutes...$(COLOR_RESET)"
+	$(GO) test -tags=performance -v ./codex -run TestPerformance_HighVolumeWithAllFeatures -timeout 30m
+	@echo "$(COLOR_GREEN)✓ High-volume performance tests complete$(COLOR_RESET)"
+
+performance-scaling: ## Run concurrency scaling performance tests
+	@echo "$(COLOR_BOLD)Running concurrency scaling tests...$(COLOR_RESET)"
+	$(GO) test -tags=performance -v ./codex -run TestPerformance_ConcurrencyScaling -timeout 15m
+	@echo "$(COLOR_GREEN)✓ Scaling tests complete$(COLOR_RESET)"
+
+performance-all: ## Run all performance tests
+	@echo "$(COLOR_BOLD)Running all performance tests...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory performance
+	@$(MAKE) --no-print-directory performance-high-volume
+	@$(MAKE) --no-print-directory performance-scaling
+	@echo "$(COLOR_GREEN)✓ All performance tests complete$(COLOR_RESET)"
+
+benchmark-compare: ## Compare CodexDB with Redis and Memcached
+	@echo "$(COLOR_BOLD)Building comparison benchmark...$(COLOR_RESET)"
+	@$(GO) build -o $(BUILD_DIR)/benchmark-comparison ./cmd/benchmark-comparison
+	@echo "$(COLOR_BOLD)Starting Docker services...$(COLOR_RESET)"
+	@docker-compose up -d
+	@echo "$(COLOR_YELLOW)Waiting for services to be ready...$(COLOR_RESET)"
+	@sleep 3
+	@echo "$(COLOR_BOLD)Running comparison benchmark...$(COLOR_RESET)"
+	@$(BUILD_DIR)/benchmark-comparison
+	@echo ""
+	@echo "$(COLOR_YELLOW)Stopping Docker services...$(COLOR_RESET)"
+	@docker-compose down
+	@echo "$(COLOR_GREEN)✓ Comparison complete$(COLOR_RESET)"
+
+benchmark-compare-quick: ## Quick comparison (5000 ops)
+	@echo "$(COLOR_BOLD)Building comparison benchmark...$(COLOR_RESET)"
+	@$(GO) build -o $(BUILD_DIR)/benchmark-comparison ./cmd/benchmark-comparison
+	@echo "$(COLOR_BOLD)Running quick comparison (5000 ops)...$(COLOR_RESET)"
+	@$(BUILD_DIR)/benchmark-comparison -ops 5000
+	@echo "$(COLOR_GREEN)✓ Quick comparison complete$(COLOR_RESET)"
 
 # Code quality targets
 lint: ## Run linter (golangci-lint)

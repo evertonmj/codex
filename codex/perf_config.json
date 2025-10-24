@@ -1,0 +1,56 @@
+{
+  "test_name": "High Volume Performance Test",
+  "description": "Comprehensive test with all features: backup, encryption, errors, integrity, logger, and storage",
+  "test_scenarios": {
+    "high_volume_writes": {
+      "enabled": true,
+      "num_operations": 10000,
+      "concurrency": 10,
+      "use_encryption": true,
+      "use_backups": true,
+      "backup_count": 3
+    },
+    "concurrent_mixed_operations": {
+      "enabled": true,
+      "num_workers": 20,
+      "operations_per_worker": 500,
+      "read_write_ratio": 0.7,
+      "use_encryption": true
+    },
+    "ledger_mode_stress": {
+      "enabled": true,
+      "num_operations": 5000,
+      "use_ledger": true,
+      "verify_replay": true
+    },
+    "large_data_handling": {
+      "enabled": true,
+      "num_records": 1000,
+      "record_size_kb": 10,
+      "use_encryption": true,
+      "use_backups": true
+    },
+    "backup_rotation_stress": {
+      "enabled": true,
+      "num_updates": 100,
+      "num_backups": 5,
+      "verify_rotation": true
+    }
+  },
+  "validation": {
+    "check_data_integrity": true,
+    "check_encryption": true,
+    "check_backup_consistency": true,
+    "check_error_handling": true,
+    "performance_thresholds": {
+      "max_write_time_ms": 1000,
+      "max_read_time_ms": 500,
+      "min_ops_per_second": 1000
+    }
+  },
+  "logging": {
+    "enabled": true,
+    "level": "info",
+    "output_file": "perf_test.log"
+  }
+}

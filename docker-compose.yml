@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: codexdb-redis-bench
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - benchmark-network
+
+  memcached:
+    image: memcached:1.6-alpine
+    container_name: codexdb-memcached-bench
+    ports:
+      - "11211:11211"
+    command: memcached -m 512
+    networks:
+      - benchmark-network
+
+networks:
+  benchmark-network:
+    driver: bridge
+
+volumes:
+  redis-data:

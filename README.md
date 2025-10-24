@@ -1,7 +1,7 @@
 # CodexDB
 
 [![Go Version](https://img.shields.io/badge/go-1.20+-blue.svg)](https://golang.org)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://mozilla.org/MPL/2.0/)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](#)
 [![Test Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](#)
 
@@ -685,7 +685,7 @@ go build -o codex-cli ./cmd/codex-cli
 
 ## 📝 License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Mozilla Public License Version 2.0. See the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 

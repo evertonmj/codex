@@ -23,3 +23,6 @@
 
 codex-cli
 .claude/
+.DS_Store
+
+*.DS_Store*

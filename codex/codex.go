@@ -45,6 +45,7 @@ import (
 	"go-file-persistence/codex/internal/backup"
 	"go-file-persistence/codex/internal/batch"
 	"go-file-persistence/codex/internal/compression"
+	"go-file-persistence/codex/internal/path"
 	"go-file-persistence/codex/internal/storage"
 )
 
@@ -83,6 +84,24 @@ type Store struct {
 // New creates a new key-value store at the specified path with default options.
 func New(path string) (*Store, error) {
 	return NewWithOptions(path, Options{})
+}
+
+// NewHome creates a new key-value store in the user's home directory (~/.codex/).
+// The database file is created with automatic naming: <<NAME>>_<TIMESTAMP>_<RANDOM_HASH>.db
+// If name is empty, it defaults to "codex".
+// Example: /Users/everton/codex/mydb_20250101_120000_a1b2c3d4e5f6g7h8.db
+func NewHome(name string) (*Store, error) {
+	return NewHomeWithOptions(name, Options{})
+}
+
+// NewHomeWithOptions creates a new key-value store in the user's home directory with options.
+// See NewHome for naming details.
+func NewHomeWithOptions(name string, opts Options) (*Store, error) {
+	dbPath, err := path.GenerateDBPath(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate database path: %w", err)
+	}
+	return NewWithOptions(dbPath, opts)
 }
 
 // NewWithOptions creates a new key-value store with the given options.
@@ -139,16 +158,33 @@ func NewWithOptions(path string, opts Options) (*Store, error) {
 
 // Set stores a value for the given key.
 func (s *Store) Set(key string, value interface{}) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
+	// Marshal outside lock (fast operation)
 	data, err := json.Marshal(value)
 	if err != nil {
 		return fmt.Errorf("failed to marshal value: %w", err)
 	}
+
+	// Update in-memory data and take snapshot while holding lock
+	s.mu.Lock()
 	s.data[key] = data
 
-	return s.persist(storage.PersistRequest{Op: storage.OpSet, Key: key, Value: data})
+	// Snapshot data for persist (only in snapshot mode)
+	var snapshotData map[string][]byte
+	if !s.options.LedgerMode {
+		snapshotData = make(map[string][]byte, len(s.data))
+		for k, v := range s.data {
+			snapshotData[k] = v
+		}
+	}
+	s.mu.Unlock()
+
+	// Persist without lock (slow I/O operation)
+	return s.persist(storage.PersistRequest{
+		Op: storage.OpSet,
+		Key: key,
+		Value: data,
+		Data: snapshotData,
+	})
 }
 
 // Get retrieves a value for the given key.
@@ -165,20 +201,46 @@ func (s *Store) Get(key string, value interface{}) error {
 
 // Delete removes a key from the store.
 func (s *Store) Delete(key string) error {
+	// Delete from in-memory data and take snapshot while holding lock
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	delete(s.data, key)
-	return s.persist(storage.PersistRequest{Op: storage.OpDelete, Key: key})
+
+	// Snapshot data for persist (only in snapshot mode)
+	var snapshotData map[string][]byte
+	if !s.options.LedgerMode {
+		snapshotData = make(map[string][]byte, len(s.data))
+		for k, v := range s.data {
+			snapshotData[k] = v
+		}
+	}
+	s.mu.Unlock()
+
+	// Persist without lock (slow I/O operation)
+	return s.persist(storage.PersistRequest{
+		Op: storage.OpDelete,
+		Key: key,
+		Data: snapshotData,
+	})
 }
 
 // Clear removes all keys from the store.
 func (s *Store) Clear() error {
+	// Clear in-memory data while holding lock
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	s.data = make(map[string][]byte)
-	return s.persist(storage.PersistRequest{Op: storage.OpClear})
+
+	// Snapshot (will be empty)
+	var snapshotData map[string][]byte
+	if !s.options.LedgerMode {
+		snapshotData = make(map[string][]byte)
+	}
+	s.mu.Unlock()
+
+	// Persist without lock (slow I/O operation)
+	return s.persist(storage.PersistRequest{
+		Op: storage.OpClear,
+		Data: snapshotData,
+	})
 }
 
 // Has checks if a key exists in the store.
@@ -205,6 +267,11 @@ func (s *Store) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.storer.Close()
+}
+
+// Path returns the file path of the database.
+func (s *Store) Path() string {
+	return s.path
 }
 
 // BatchSet sets multiple key-value pairs atomically
@@ -298,23 +365,23 @@ func (b *Batch) Delete(key string) *Batch {
 
 // Execute executes all operations in the batch atomically
 func (b *Batch) Execute() error {
-	b.store.mu.Lock()
-	defer b.store.mu.Unlock()
-
-	// Validate batch
+	// Validate batch (outside lock)
 	if err := b.operations.Validate(); err != nil {
 		return fmt.Errorf("invalid batch: %w", err)
 	}
 
-	// Optimize operations
+	// Optimize operations (outside lock)
 	b.operations.OptimizeOperations()
 
-	// Apply all operations to in-memory data
+	// Apply all operations to in-memory data and take snapshot while holding lock
+	b.store.mu.Lock()
+
 	for _, op := range b.operations.Operations() {
 		switch op.Type {
 		case batch.OpSet:
 			data, err := json.Marshal(op.Value)
 			if err != nil {
+				b.store.mu.Unlock()
 				return fmt.Errorf("failed to marshal value for key %s: %w", op.Key, err)
 			}
 			b.store.data[op.Key] = data
@@ -323,8 +390,18 @@ func (b *Batch) Execute() error {
 		}
 	}
 
-	// Persist batch
-	return b.store.persistBatch(b.operations)
+	// Snapshot data for persist (only in snapshot mode)
+	var snapshotData map[string][]byte
+	if !b.store.options.LedgerMode {
+		snapshotData = make(map[string][]byte, len(b.store.data))
+		for k, v := range b.store.data {
+			snapshotData[k] = v
+		}
+	}
+	b.store.mu.Unlock()
+
+	// Persist batch without lock (slow I/O operation)
+	return b.store.persistBatchWithSnapshot(b.operations, snapshotData)
 }
 
 // Size returns the number of operations in the batch
@@ -334,9 +411,17 @@ func (b *Batch) Size() int {
 
 // persist handles the persistence logic.
 func (s *Store) persist(req storage.PersistRequest) error {
-	// For snapshot mode, we need to provide the full data map.
+	// For snapshot mode, use the data provided in request
+	// (already snapshotted while holding lock)
 	if !s.options.LedgerMode {
-		req.Data = s.data
+		// Data should already be in req.Data from caller
+		// If not provided (backward compat), read current data
+		if req.Data == nil {
+			s.mu.RLock()
+			req.Data = s.data
+			s.mu.RUnlock()
+		}
+
 		// Backups only make sense in snapshot mode in this architecture.
 		if s.options.NumBackups > 0 {
 			if err := backup.Create(s.path, s.options.NumBackups); err != nil {
@@ -380,6 +465,52 @@ func (s *Store) persistBatch(b *batch.Batch) error {
 	if !s.options.LedgerMode {
 		if len(reqs) > 0 {
 			reqs[len(reqs)-1].Data = s.data
+		}
+
+		// Create backup
+		if s.options.NumBackups > 0 {
+			if err := backup.Create(s.path, s.options.NumBackups); err != nil {
+				return err
+			}
+		}
+	}
+
+	return s.storer.PersistBatch(reqs)
+}
+
+// persistBatchWithSnapshot handles batch persistence logic with pre-snapshotted data
+func (s *Store) persistBatchWithSnapshot(b *batch.Batch, snapshotData map[string][]byte) error {
+	// Create storage requests
+	var reqs []storage.PersistRequest
+
+	for _, op := range b.Operations() {
+		var persistOp storage.PersistOp
+		if op.Type == batch.OpSet {
+			persistOp = storage.OpSet
+		} else {
+			persistOp = storage.OpDelete
+		}
+
+		req := storage.PersistRequest{
+			Op:  persistOp,
+			Key: op.Key,
+		}
+
+		if op.Type == batch.OpSet {
+			data, err := json.Marshal(op.Value)
+			if err != nil {
+				return fmt.Errorf("failed to marshal batch value for key %s: %w", op.Key, err)
+			}
+			req.Value = data
+		}
+
+		reqs = append(reqs, req)
+	}
+
+	// For snapshot mode, add final data (already snapshotted)
+	if !s.options.LedgerMode {
+		if len(reqs) > 0 {
+			reqs[len(reqs)-1].Data = snapshotData
 		}
 
 		// Create backup

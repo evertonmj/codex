@@ -8,10 +8,11 @@
 //   - Simple recovery by copying backup file
 //
 // Backup Rotation Example:
-//   With NumBackups=3, maintains:
-//   - my.db.bak.1 (most recent backup)
-//   - my.db.bak.2
-//   - my.db.bak.3 (oldest backup)
+//
+//	With NumBackups=3, maintains:
+//	- my.db.bak.1 (most recent backup)
+//	- my.db.bak.2
+//	- my.db.bak.3 (oldest backup)
 //
 // When a new backup is created, .db.bak.3 is deleted and others
 // are renamed to maintain the rotation.
@@ -66,7 +67,7 @@ func Create(path string, numBackups int) error {
 		if err != nil {
 			return fmt.Errorf("failed to read current db file for backup: %w", err)
 		}
-		if err := os.WriteFile(newBackupPath, data, 0644); err != nil {
+		if err := os.WriteFile(newBackupPath, data, 0600); err != nil {
 			return fmt.Errorf("failed to write backup file: %w", err)
 		}
 	}

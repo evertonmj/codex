@@ -68,7 +68,7 @@ For an index of all documentation, see **[docs/README.md](docs/README.md)**.
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/go-file-persistence.git
+git clone https://github.com/evertonmj/go-file-persistence.git
 cd go-file-persistence
 
 # See all available commands
@@ -94,10 +94,10 @@ See [MAKEFILE.md](MAKEFILE.md) for complete Makefile documentation.
 
 ```bash
 # Using go get
-go get github.com/your-username/go-file-persistence/codex
+go get github.com/evertonmj/go-file-persistence/codex
 
 # Or clone and build manually
-git clone https://github.com/your-username/go-file-persistence.git
+git clone https://github.com/evertonmj/go-file-persistence.git
 cd go-file-persistence
 go build -o bin/codex-cli ./cmd/codex-cli
 ```
@@ -154,13 +154,13 @@ Add CodexDB to your Go project:
 
 ```bash
 cd your-project
-go get github.com/your-username/go-file-persistence/codex
+go get github.com/evertonmj/go-file-persistence/codex
 ```
 
 Then import in your code:
 
 ```go
-import "github.com/your-username/go-file-persistence/codex"
+import "github.com/evertonmj/go-file-persistence/codex"
 ```
 
 ### Method 2: Clone Repository
@@ -169,7 +169,7 @@ For development or to run examples:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/go-file-persistence.git
+git clone https://github.com/evertonmj/go-file-persistence.git
 cd go-file-persistence
 
 # Run tests to verify installation
@@ -190,7 +190,7 @@ If you want to use it as a local module:
 ```bash
 # In your project directory
 mkdir vendor
-git clone https://github.com/your-username/go-file-persistence.git vendor/codex
+git clone https://github.com/evertonmj/go-file-persistence.git vendor/codex
 ```
 
 Update your `go.mod`:
@@ -202,7 +202,7 @@ replace go-file-persistence => ./vendor/codex
 
 ```bash
 # Check if module is accessible
-go list -m github.com/your-username/go-file-persistence/codex
+go list -m github.com/evertonmj/go-file-persistence/codex
 
 # Run a simple test
 cat > test.go << 'EOF'
@@ -808,7 +808,7 @@ Contributions are welcome! Please follow these guidelines:
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/go-file-persistence.git
+git clone https://github.com/evertonmj/go-file-persistence.git
 cd go-file-persistence
 
 # Run tests
@@ -836,9 +836,9 @@ This project is licensed under the Mozilla Public License Version 2.0. See the [
 
 ## 📮 Contact & Support
 
-- **Issues**: [GitHub Issues](https://github.com/your-username/go-file-persistence/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/go-file-persistence/discussions)
-- **Documentation**: [Wiki](https://github.com/your-username/go-file-persistence/wiki)
+- **Issues**: [GitHub Issues](https://github.com/evertonmj/go-file-persistence/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/evertonmj/go-file-persistence/discussions)
+- **Documentation**: [Wiki](https://github.com/evertonmj/go-file-persistence/wiki)
 
 ## 🗺️ Roadmap
 

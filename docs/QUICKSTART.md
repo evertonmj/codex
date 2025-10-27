@@ -6,7 +6,7 @@ Get up and running with CodexDB in 5 minutes.
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/go-file-persistence.git
+git clone https://github.com/evertonmj/go-file-persistence.git
 cd go-file-persistence
 
 # Build the project
@@ -316,7 +316,7 @@ codex.Options{
 - `./bin/codex-cli --help` - CLI help
 - [README.md](README.md) - Full documentation
 - [examples/](examples/) - Code examples
-- [GitHub Issues](https://github.com/your-username/go-file-persistence/issues) - Report bugs
+- [GitHub Issues](https://github.com/evertonmj/go-file-persistence/issues) - Report bugs
 
 ## Tips
 

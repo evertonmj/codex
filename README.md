@@ -64,50 +64,27 @@ For an index of all documentation, see **[docs/README.md](docs/README.md)**.
 
 ## 🚀 Quick Start
 
-### Using the Makefile (Recommended)
+Get up and running with CodexDB in under 5 minutes!
 
+### Step 1: Install CodexDB
+
+Choose your preferred installation method:
+
+**Option A: Add to existing Go project**
 ```bash
-# Clone the repository
-git clone https://github.com/evertonmj/codex.git
-cd codex
-
-# See all available commands
-make help
-
-# Run tests
-make test
-
-# Build CLI (creates both codex-cli and cdx alias)
-make build
-
-# Use the CLI
-./bin/cdx --file=test.db set mykey '"hello"'
-./bin/cdx --file=test.db get mykey
-
-# Run examples
-make run-examples
-```
-
-See [MAKEFILE.md](MAKEFILE.md) for complete Makefile documentation.
-
-### Manual Installation
-
-```bash
-# Using go get
 go get github.com/evertonmj/codex/codex
-
-# Or clone and build manually
-git clone https://github.com/evertonmj/codex.git
-cd codex
-go build -o bin/codex-cli ./cmd/codex-cli
 ```
 
-### Prerequisites
+**Option B: Clone and explore**
+```bash
+git clone https://github.com/evertonmj/codex.git
+cd codex
+make test  # Verify everything works
+```
 
-- Go 1.20 or higher
-- No external dependencies required
+### Step 2: Write Your First Program
 
-### 30-Second Example
+Create `main.go`:
 
 ```go
 package main
@@ -126,25 +103,108 @@ func main() {
     }
     defer store.Close()
 
-    // Store data
+    // Store some data
     store.Set("username", "alice")
     store.Set("score", 100)
+    store.Set("active", true)
 
     // Retrieve data
     var username string
+    var score int
+    var active bool
+    
     store.Get("username", &username)
-    fmt.Println(username) // Output: alice
+    store.Get("score", &score)
+    store.Get("active", &active)
 
-    // Check existence
-    if store.Has("username") {
-        fmt.Println("User exists!")
-    }
-
+    fmt.Printf("User: %s, Score: %d, Active: %t\n", username, score, active)
+    
     // List all keys
-    keys := store.Keys()
-    fmt.Printf("Keys: %v\n", keys)
+    fmt.Printf("All keys: %v\n", store.Keys())
 }
 ```
+
+### Step 3: Run It!
+
+```bash
+go run main.go
+```
+
+**Output:**
+```
+User: alice, Score: 100, Active: true
+All keys: [username score active]
+```
+
+### Step 4: Explore Advanced Features
+
+**Encryption (for sensitive data):**
+```go
+store, err := codex.New("secure.db", codex.WithEncryption("my-secret-key"))
+```
+
+**Batch operations (10-50x faster for bulk operations):**
+```go
+batch := store.Batch()
+batch.Set("user1", "Alice")
+batch.Set("user2", "Bob") 
+batch.Set("user3", "Charlie")
+batch.Commit() // All operations applied atomically
+```
+
+**Compression (reduce file size):**
+```go
+store, err := codex.New("compressed.db", codex.WithCompression("gzip"))
+```
+
+### Step 5: Try the CLI Tool
+
+Build and use the command-line interface:
+
+```bash
+# Build CLI (if cloned repository)
+make build
+
+# Or use go install
+go install github.com/evertonmj/codex/cmd/codex-cli@latest
+
+# Use the CLI
+codex-cli --file=test.db set greeting '"Hello, World!"'
+codex-cli --file=test.db get greeting
+codex-cli --file=test.db keys
+```
+
+### Step 6: Run Examples
+
+Explore real-world usage patterns:
+
+```bash
+# Clone repository if you haven't
+git clone https://github.com/evertonmj/codex.git
+cd codex
+
+# Run all examples
+make run-examples
+
+# Or run specific examples
+cd examples/03_encryption && go run main.go
+cd examples/06_concurrent_access && go run main.go
+```
+
+### Prerequisites
+
+- **Go 1.20+** (check with `go version`)
+- **No external dependencies** - uses Go standard library
+
+### Next Steps
+
+- 📖 **[Complete Examples](examples/)** - Real-world usage patterns
+- 🔒 **[Security Guide](docs/SECURITY.md)** - Encryption and best practices  
+- ⚡ **[Performance Guide](docs/PERFORMANCE.md)** - Optimization tips
+- 🛠️ **[CLI Reference](docs/QUICKSTART.md)** - Command-line interface
+- 🏗️ **[Architecture Overview](#-architecture)** - How CodexDB works
+
+**Need help?** Check the [examples directory](examples/) for common use cases!
 
 ## 📦 Installation
 

@@ -1,4 +1,4 @@
-.PHONY: help build test test-verbose test-coverage test-integration test-unit clean install run-cli run-examples lint fmt vet benchmark performance docs purge
+.PHONY: help build test test-verbose test-coverage test-integration test-unit clean install run-cli run-examples lint fmt vet benchmark performance docs purge prune-regen prune-regen-validate
 
 # Default target
 .DEFAULT_GOAL := help
@@ -265,6 +265,87 @@ purge: ## Purge everything: clean all artifacts, Go cache, modules, rebuild and 
 	@$(MAKE) --no-print-directory install
 	@echo ""
 	@echo "$(COLOR_GREEN)✓✓✓ Complete purge and rebuild successful$(COLOR_RESET)"
+
+prune-regen: ## Complete rebuild: wipe everything, install, build, and test
+	@echo "$(COLOR_BOLD)Starting complete rebuild process...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 1/4: Wiping builds, caches, and artifacts...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory clean-all
+	@$(GO) clean -cache -testcache -modcache
+	@echo "$(COLOR_GREEN)✓ Wipe complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 2/4: Installing dependencies...$(COLOR_RESET)"
+	@$(GO) mod tidy
+	@$(GO) mod download
+	@echo "$(COLOR_GREEN)✓ Dependencies installed$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 3/4: Building all binaries...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory build-all
+	@$(MAKE) --no-print-directory install
+	@echo "$(COLOR_GREEN)✓ Build complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 4/4: Running all tests...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory test
+	@echo "$(COLOR_GREEN)✓ Tests complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_GREEN)✓✓✓ Complete prune-regen successful$(COLOR_RESET)"
+
+prune-regen-validate: ## Complete rebuild with comprehensive validation (tests, performance, race detection, integration)
+	@echo "$(COLOR_BOLD)Starting complete rebuild with comprehensive validation...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 1/8: Wiping builds, caches, and artifacts...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory clean-all
+	@$(GO) clean -cache -testcache -modcache
+	@echo "$(COLOR_GREEN)✓ Wipe complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 2/8: Installing dependencies...$(COLOR_RESET)"
+	@$(GO) mod tidy
+	@$(GO) mod download
+	@echo "$(COLOR_GREEN)✓ Dependencies installed$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 3/8: Building all binaries...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory build-all
+	@$(MAKE) --no-print-directory install
+	@echo "$(COLOR_GREEN)✓ Build complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 4/8: Running unit tests...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory test-unit
+	@echo "$(COLOR_GREEN)✓ Unit tests complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 5/8: Running integration tests...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory test-integration
+	@echo "$(COLOR_GREEN)✓ Integration tests complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 6/8: Running race condition detection...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory test-race
+	@echo "$(COLOR_GREEN)✓ Race detection complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 7/8: Running performance tests...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory performance-all
+	@echo "$(COLOR_GREEN)✓ Performance tests complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Step 8/8: Running example validation...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory test-examples
+	@echo "$(COLOR_GREEN)✓ Example validation complete$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Generating coverage report...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory test-coverage
+	@echo ""
+	@echo "$(COLOR_GREEN)✓✓✓ Complete prune-regen-validate successful$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_BOLD)Validation Summary:$(COLOR_RESET)"
+	@echo "  ✓ Build artifacts wiped and rebuilt"
+	@echo "  ✓ Dependencies fresh installed"
+	@echo "  ✓ All binaries built and installed"
+	@echo "  ✓ Unit tests passed"
+	@echo "  ✓ Integration tests passed"
+	@echo "  ✓ No race conditions detected"
+	@echo "  ✓ Performance tests passed"
+	@echo "  ✓ Example validation passed"
+	@echo "  ✓ Coverage report generated"
+	@echo ""
+	@echo "$(COLOR_BOLD)Coverage Summary:$(COLOR_RESET)"
+	@$(GO) tool cover -func=$(COVERAGE_FILE) | grep total
 
 # Documentation targets
 docs: ## Generate documentation

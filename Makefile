@@ -1,4 +1,4 @@
-.PHONY: help build test test-verbose test-coverage test-integration test-unit clean install run-cli run-examples lint fmt vet benchmark performance docs
+.PHONY: help build test test-verbose test-coverage test-integration test-unit clean install run-cli run-examples lint fmt vet benchmark performance docs purge
 
 # Default target
 .DEFAULT_GOAL := help
@@ -231,6 +231,40 @@ clean-all: clean ## Remove all generated files including vendor
 	@echo "$(COLOR_BOLD)Deep cleaning...$(COLOR_RESET)"
 	@rm -rf vendor/
 	@echo "$(COLOR_GREEN)✓ Deep clean complete$(COLOR_RESET)"
+
+purge: ## Purge everything: clean all artifacts, Go cache, modules, rebuild and reinstall
+	@echo "$(COLOR_BOLD)Purging all artifacts, cache, and modules...$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Removing build artifacts...$(COLOR_RESET)"
+	@rm -rf $(BUILD_DIR)
+	@rm -rf $(COVERAGE_DIR)
+	@rm -f *.db *.db.bak.* *.log
+	@find . -name "*.db" -type f -delete
+	@find . -name "*.db.bak.*" -type f -delete
+	@find . -name "*.log" -type f -delete
+	@echo "$(COLOR_GREEN)✓ Build artifacts removed$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Removing Go cache...$(COLOR_RESET)"
+	@$(GO) clean -cache
+	@$(GO) clean -testcache
+	@echo "$(COLOR_GREEN)✓ Go cache cleared$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Removing Go modules...$(COLOR_RESET)"
+	@rm -rf vendor/
+	@rm -f go.sum
+	@echo "$(COLOR_GREEN)✓ Go modules removed$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Downloading fresh Go modules...$(COLOR_RESET)"
+	@$(GO) mod download
+	@echo "$(COLOR_GREEN)✓ Fresh modules downloaded$(COLOR_RESET)"
+	@echo ""
+	@echo "$(COLOR_YELLOW)Rebuilding binaries...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory build
+	@echo ""
+	@echo "$(COLOR_YELLOW)Reinstalling binaries...$(COLOR_RESET)"
+	@$(MAKE) --no-print-directory install
+	@echo ""
+	@echo "$(COLOR_GREEN)✓✓✓ Complete purge and rebuild successful$(COLOR_RESET)"
 
 # Documentation targets
 docs: ## Generate documentation

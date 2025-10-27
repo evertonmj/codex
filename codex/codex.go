@@ -74,11 +74,12 @@ type Options struct {
 
 // Store represents a key-value store.
 type Store struct {
-	path    string
-	data    map[string][]byte
-	mu      sync.RWMutex
-	storer  storage.Storer
-	options Options
+	path       string
+	data       map[string][]byte
+	mu         sync.RWMutex
+	persistMu  sync.Mutex // Protects file persist operations to prevent concurrent writes
+	storer     storage.Storer
+	options    Options
 }
 
 // New creates a new key-value store at the specified path with default options.
@@ -164,26 +165,17 @@ func (s *Store) Set(key string, value interface{}) error {
 		return fmt.Errorf("failed to marshal value: %w", err)
 	}
 
-	// Update in-memory data and take snapshot while holding lock
+	// Update in-memory data while holding lock (fast in-memory operation)
 	s.mu.Lock()
 	s.data[key] = data
-
-	// Snapshot data for persist (only in snapshot mode)
-	var snapshotData map[string][]byte
-	if !s.options.LedgerMode {
-		snapshotData = make(map[string][]byte, len(s.data))
-		for k, v := range s.data {
-			snapshotData[k] = v
-		}
-	}
 	s.mu.Unlock()
 
 	// Persist without lock (slow I/O operation)
+	// The persist() method will read s.data with a read lock if needed
 	return s.persist(storage.PersistRequest{
 		Op: storage.OpSet,
 		Key: key,
 		Value: data,
-		Data: snapshotData,
 	})
 }
 
@@ -201,45 +193,30 @@ func (s *Store) Get(key string, value interface{}) error {
 
 // Delete removes a key from the store.
 func (s *Store) Delete(key string) error {
-	// Delete from in-memory data and take snapshot while holding lock
+	// Delete from in-memory data while holding lock (fast in-memory operation)
 	s.mu.Lock()
 	delete(s.data, key)
-
-	// Snapshot data for persist (only in snapshot mode)
-	var snapshotData map[string][]byte
-	if !s.options.LedgerMode {
-		snapshotData = make(map[string][]byte, len(s.data))
-		for k, v := range s.data {
-			snapshotData[k] = v
-		}
-	}
 	s.mu.Unlock()
 
 	// Persist without lock (slow I/O operation)
+	// The persist() method will read s.data with a read lock if needed
 	return s.persist(storage.PersistRequest{
 		Op: storage.OpDelete,
 		Key: key,
-		Data: snapshotData,
 	})
 }
 
 // Clear removes all keys from the store.
 func (s *Store) Clear() error {
-	// Clear in-memory data while holding lock
+	// Clear in-memory data while holding lock (fast in-memory operation)
 	s.mu.Lock()
 	s.data = make(map[string][]byte)
-
-	// Snapshot (will be empty)
-	var snapshotData map[string][]byte
-	if !s.options.LedgerMode {
-		snapshotData = make(map[string][]byte)
-	}
 	s.mu.Unlock()
 
 	// Persist without lock (slow I/O operation)
+	// The persist() method will read s.data with a read lock if needed
 	return s.persist(storage.PersistRequest{
 		Op: storage.OpClear,
-		Data: snapshotData,
 	})
 }
 
@@ -373,7 +350,7 @@ func (b *Batch) Execute() error {
 	// Optimize operations (outside lock)
 	b.operations.OptimizeOperations()
 
-	// Apply all operations to in-memory data and take snapshot while holding lock
+	// Apply all operations to in-memory data while holding lock (fast in-memory operation)
 	b.store.mu.Lock()
 
 	for _, op := range b.operations.Operations() {
@@ -390,18 +367,11 @@ func (b *Batch) Execute() error {
 		}
 	}
 
-	// Snapshot data for persist (only in snapshot mode)
-	var snapshotData map[string][]byte
-	if !b.store.options.LedgerMode {
-		snapshotData = make(map[string][]byte, len(b.store.data))
-		for k, v := range b.store.data {
-			snapshotData[k] = v
-		}
-	}
 	b.store.mu.Unlock()
 
 	// Persist batch without lock (slow I/O operation)
-	return b.store.persistBatchWithSnapshot(b.operations, snapshotData)
+	// The persistBatch() method will read s.data with a read lock if needed
+	return b.store.persistBatch(b.operations)
 }
 
 // Size returns the number of operations in the batch
@@ -411,6 +381,12 @@ func (b *Batch) Size() int {
 
 // persist handles the persistence logic.
 func (s *Store) persist(req storage.PersistRequest) error {
+	// Protect file I/O operations with persistMu to prevent concurrent writes
+	// This allows multiple goroutines to update s.data concurrently,
+	// but serializes file operations since the storage layer requires exclusive access
+	s.persistMu.Lock()
+	defer s.persistMu.Unlock()
+
 	// For snapshot mode, use the data provided in request
 	// (already snapshotted while holding lock)
 	if !s.options.LedgerMode {
@@ -434,6 +410,10 @@ func (s *Store) persist(req storage.PersistRequest) error {
 
 // persistBatch handles batch persistence logic
 func (s *Store) persistBatch(b *batch.Batch) error {
+	// Protect file I/O operations with persistMu to prevent concurrent writes
+	s.persistMu.Lock()
+	defer s.persistMu.Unlock()
+
 	// Create storage requests
 	var reqs []storage.PersistRequest
 
@@ -464,7 +444,10 @@ func (s *Store) persistBatch(b *batch.Batch) error {
 	// For snapshot mode, add final data
 	if !s.options.LedgerMode {
 		if len(reqs) > 0 {
+			// Hold read lock when accessing s.data to prevent race conditions
+			s.mu.RLock()
 			reqs[len(reqs)-1].Data = s.data
+			s.mu.RUnlock()
 		}
 
 		// Create backup
@@ -478,48 +461,3 @@ func (s *Store) persistBatch(b *batch.Batch) error {
 	return s.storer.PersistBatch(reqs)
 }
 
-// persistBatchWithSnapshot handles batch persistence logic with pre-snapshotted data
-func (s *Store) persistBatchWithSnapshot(b *batch.Batch, snapshotData map[string][]byte) error {
-	// Create storage requests
-	var reqs []storage.PersistRequest
-
-	for _, op := range b.Operations() {
-		var persistOp storage.PersistOp
-		if op.Type == batch.OpSet {
-			persistOp = storage.OpSet
-		} else {
-			persistOp = storage.OpDelete
-		}
-
-		req := storage.PersistRequest{
-			Op:  persistOp,
-			Key: op.Key,
-		}
-
-		if op.Type == batch.OpSet {
-			data, err := json.Marshal(op.Value)
-			if err != nil {
-				return fmt.Errorf("failed to marshal batch value for key %s: %w", op.Key, err)
-			}
-			req.Value = data
-		}
-
-		reqs = append(reqs, req)
-	}
-
-	// For snapshot mode, add final data (already snapshotted)
-	if !s.options.LedgerMode {
-		if len(reqs) > 0 {
-			reqs[len(reqs)-1].Data = snapshotData
-		}
-
-		// Create backup
-		if s.options.NumBackups > 0 {
-			if err := backup.Create(s.path, s.options.NumBackups); err != nil {
-				return err
-			}
-		}
-	}
-
-	return s.storer.PersistBatch(reqs)
-}

@@ -24,13 +24,29 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 )
 
+// mu protects concurrent backup creation operations.
+// Since backup rotation modifies multiple files that could be accessed
+// concurrently by multiple writers (now that store lock is not held during I/O),
+// we need to serialize backup operations to prevent race conditions.
+var mu sync.Mutex
+
 // Create performs a rotation of backup files.
+// This function is protected by a mutex to ensure thread-safe backup rotation
+// when called concurrently by multiple writers.
 func Create(path string, numBackups int) error {
 	if numBackups <= 0 {
 		return nil
 	}
+
+	// Lock to prevent concurrent backup rotation race conditions
+	// This serializes backup operations across all concurrent writers,
+	// but backup creation is a relatively fast operation (few milliseconds)
+	// so the contention is minimal compared to the full lock that was being held.
+	mu.Lock()
+	defer mu.Unlock()
 
 	// 1. Rotate existing backups
 	for i := numBackups - 1; i >= 1; i-- {

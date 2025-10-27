@@ -8,7 +8,7 @@ This document describes all available Makefile targets for the CodexDB project.
 # Show all available commands
 make help
 
-# Most common commands
+# Most commonte commands
 make build          # Build the CLI
 make test           # Run all tests
 make test-coverage  # Run tests with coverage

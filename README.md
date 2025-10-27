@@ -49,6 +49,19 @@ CodexDB is now **production-grade** with enterprise-level concurrency support:
 - [Contributing](#-contributing)
 - [License](#-license)
 
+## 📚 Documentation
+
+For comprehensive guides and documentation, see the **[docs/](docs/)** folder:
+
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Get started in 5 minutes
+- **[Security Guide](docs/SECURITY.md)** - Encryption, integrity, and best practices
+- **[Testing Guide](docs/TESTING.md)** - How to run tests and verify functionality
+- **[Performance Guide](docs/PERFORMANCE.md)** - Benchmarking and tuning
+- **[Contributing Guide](docs/CONTRIBUTING.md)** - How to contribute
+- **[Production Audit](docs/analysis/PRODUCTION_AUDIT.md)** - Production readiness assessment
+
+For an index of all documentation, see **[docs/README.md](docs/README.md)**.
+
 ## 🚀 Quick Start
 
 ### Using the Makefile (Recommended)

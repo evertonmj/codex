@@ -371,10 +371,6 @@ The CodexDB project now has:
 - ✅ Zero technical debt
 - ✅ All quality gates passed
 
-## 🙏 Acknowledgments
-
-All work completed by Claude Code with comprehensive testing, documentation, and build automation.
-
 ---
 
 **Project:** CodexDB - File-based Key-Value Database for Go

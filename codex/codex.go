@@ -381,40 +381,41 @@ func (b *Batch) Size() int {
 
 // persist handles the persistence logic.
 func (s *Store) persist(req storage.PersistRequest) error {
-	// Protect file I/O operations with persistMu to prevent concurrent writes
-	// This allows multiple goroutines to update s.data concurrently,
-	// but serializes file operations since the storage layer requires exclusive access
-	s.persistMu.Lock()
-	defer s.persistMu.Unlock()
-
-	// For snapshot mode, use the data provided in request
-	// (already snapshotted while holding lock)
+	// For snapshot mode, handle backups first (before acquiring persistMu)
+	// Backups have their own synchronization and should not block other writers
 	if !s.options.LedgerMode {
 		// Data should already be in req.Data from caller
-		// If not provided (backward compat), read current data
+		// If not provided (backward compat), copy current data while holding lock
 		if req.Data == nil {
 			s.mu.RLock()
-			req.Data = s.data
+			// Copy data to ensure consistency (storage layer may access it slowly)
+			req.Data = make(map[string][]byte, len(s.data))
+			for k, v := range s.data {
+				req.Data[k] = v
+			}
 			s.mu.RUnlock()
 		}
 
-		// Backups only make sense in snapshot mode in this architecture.
+		// Create backups (has its own mutex, runs independently)
 		if s.options.NumBackups > 0 {
 			if err := backup.Create(s.path, s.options.NumBackups); err != nil {
 				return err
 			}
 		}
 	}
+
+	// Protect main file I/O operations with persistMu
+	// This allows multiple goroutines to update s.data concurrently,
+	// but serializes the main data file write since storage layer requires exclusive access
+	s.persistMu.Lock()
+	defer s.persistMu.Unlock()
+
 	return s.storer.Persist(req)
 }
 
 // persistBatch handles batch persistence logic
 func (s *Store) persistBatch(b *batch.Batch) error {
-	// Protect file I/O operations with persistMu to prevent concurrent writes
-	s.persistMu.Lock()
-	defer s.persistMu.Unlock()
-
-	// Create storage requests
+	// Create storage requests (outside persistMu)
 	var reqs []storage.PersistRequest
 
 	for _, op := range b.Operations() {
@@ -441,22 +442,29 @@ func (s *Store) persistBatch(b *batch.Batch) error {
 		reqs = append(reqs, req)
 	}
 
-	// For snapshot mode, add final data
+	// For snapshot mode, handle data and backups before acquiring persistMu
 	if !s.options.LedgerMode {
 		if len(reqs) > 0 {
-			// Hold read lock when accessing s.data to prevent race conditions
+			// Hold read lock and copy data to prevent race conditions
 			s.mu.RLock()
-			reqs[len(reqs)-1].Data = s.data
+			reqs[len(reqs)-1].Data = make(map[string][]byte, len(s.data))
+			for k, v := range s.data {
+				reqs[len(reqs)-1].Data[k] = v
+			}
 			s.mu.RUnlock()
 		}
 
-		// Create backup
+		// Create backup (has its own mutex, runs independently)
 		if s.options.NumBackups > 0 {
 			if err := backup.Create(s.path, s.options.NumBackups); err != nil {
 				return err
 			}
 		}
 	}
+
+	// Protect main file I/O operations with persistMu
+	s.persistMu.Lock()
+	defer s.persistMu.Unlock()
 
 	return s.storer.PersistBatch(reqs)
 }

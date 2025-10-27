@@ -13,7 +13,9 @@ import (
 
 func main() {
 	// Define global flags
-	filePath := flag.String("file", "default.cdx", "Path to the database file.")
+	filePath := flag.String("file", "", "Path to the database file.")
+	useHome := flag.Bool("home", false, "Create database in home directory (~/.codex/). Use with optional database name.")
+	dbName := flag.String("name", "", "Database name (used with --home flag). Format: NAME_TIMESTAMP_HASH.db")
 	ledgerMode := flag.Bool("ledger", false, "Enable append-only ledger mode.")
 
 	flag.Parse()
@@ -21,7 +23,7 @@ func main() {
 	// Get command and arguments
 	args := flag.Args()
 	if len(args) < 1 {
-		fatalf("Usage: codex-cli [--file path] [--ledger] <command> [args]\nCommands: set, get, delete, keys, has, clear, interactive")
+		fatalf("Usage: codex-cli [--file path | --home [--name dbname]] [--ledger] <command> [args]\nCommands: set, get, delete, keys, has, clear, interactive")
 	}
 
 	// Read encryption key from environment variable for security
@@ -37,11 +39,28 @@ func main() {
 	}
 
 	// Create or open the store
-	store, err := codex.NewWithOptions(*filePath, opts)
+	var store *codex.Store
+	var err error
+
+	if *useHome {
+		// Use home directory for database
+		store, err = codex.NewHomeWithOptions(*dbName, opts)
+	} else if *filePath != "" {
+		// Use specified file path
+		store, err = codex.NewWithOptions(*filePath, opts)
+	} else {
+		fatalf("Error: must specify either --file <path> or --home [--name <dbname>]")
+	}
+
 	if err != nil {
 		fatalf("Failed to open store: %v", err)
 	}
 	defer store.Close()
+
+	// Print database path when using --home
+	if *useHome {
+		fmt.Fprintf(os.Stderr, "Database: %s\n", store.Path())
+	}
 
 	command := args[0]
 	cmdArgs := args[1:]

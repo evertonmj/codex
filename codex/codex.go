@@ -253,25 +253,25 @@ func (s *Store) Path() string {
 
 // BatchSet sets multiple key-value pairs atomically
 func (s *Store) BatchSet(items map[string]interface{}) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	// Prepare batch operations
 	b := batch.New()
 	for key, value := range items {
 		b.Set(key, value)
 	}
 
-	// Marshall all values and update in-memory data
+	// Marshall all values and update in-memory data while holding lock
+	s.mu.Lock()
 	for key, value := range items {
 		data, err := json.Marshal(value)
 		if err != nil {
+			s.mu.Unlock()
 			return fmt.Errorf("failed to marshal value for key %s: %w", key, err)
 		}
 		s.data[key] = data
 	}
+	s.mu.Unlock()
 
-	// Persist batch
+	// Persist batch WITHOUT holding the lock (slow I/O operation)
 	return s.persistBatch(b)
 }
 
@@ -296,21 +296,20 @@ func (s *Store) BatchGet(keys []string) (map[string]interface{}, error) {
 
 // BatchDelete deletes multiple keys atomically
 func (s *Store) BatchDelete(keys []string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	// Prepare batch operations
 	b := batch.New()
 	for _, key := range keys {
 		b.Delete(key)
 	}
 
-	// Delete from in-memory data
+	// Delete from in-memory data while holding lock
+	s.mu.Lock()
 	for _, key := range keys {
 		delete(s.data, key)
 	}
+	s.mu.Unlock()
 
-	// Persist batch
+	// Persist batch WITHOUT holding the lock (slow I/O operation)
 	return s.persistBatch(b)
 }
 

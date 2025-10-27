@@ -277,7 +277,7 @@ docs: ## Generate documentation
 
 docs-server: ## Start local documentation server
 	@echo "$(COLOR_BOLD)Starting documentation server...$(COLOR_RESET)"
-	@echo "$(COLOR_YELLOW)Open http://localhost:6060/pkg/go-file-persistence/codex/$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Open http://localhost:6060/pkg/github.com/evertonmj/codex/codex/$(COLOR_RESET)"
 	godoc -http=:6060
 
 # Development targets

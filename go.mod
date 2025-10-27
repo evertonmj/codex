@@ -1,4 +1,4 @@
-module go-file-persistence
+module github.com/evertonmj/codex
 
 go 1.24.4
 

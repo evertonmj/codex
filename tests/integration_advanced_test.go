@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"go-file-persistence/codex"
+	"github.com/evertonmj/codex/codex"
 )
 
 // TestIntegration_ErrorRecovery tests error handling and recovery scenarios

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"go-file-persistence/codex"
+	"github.com/evertonmj/codex/codex"
 )
 
 func TestComplexDataExample(t *testing.T) {

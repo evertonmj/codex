@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"go-file-persistence/codex"
+	"github.com/evertonmj/codex/codex"
 )
 
 func TestConcurrentAccessExample(t *testing.T) {

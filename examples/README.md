@@ -90,7 +90,7 @@ go version
 2. Clone the repository:
 ```bash
 git clone <repository-url>
-cd go-file-persistence
+cd codex
 ```
 
 3. No additional dependencies required! Codex uses only Go standard library.
@@ -102,7 +102,7 @@ package main
 
 import (
     "log"
-    "go-file-persistence/codex"
+    "github.com/evertonmj/codex/codex"
 )
 
 func main() {
@@ -134,7 +134,7 @@ func main() {
 ### Advanced Configuration
 
 ```go
-import "go-file-persistence/codex"
+import "github.com/evertonmj/codex/codex"
 
 // With encryption
 key := make([]byte, 32) // 256-bit key

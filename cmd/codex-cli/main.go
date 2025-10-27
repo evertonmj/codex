@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"go-file-persistence/codex"
+	"github.com/evertonmj/codex/codex"
 )
 
 func main() {

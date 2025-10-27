@@ -11,7 +11,7 @@ import (
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/redis/go-redis/v9"
-	"go-file-persistence/codex"
+	"github.com/evertonmj/codex/codex"
 )
 
 type BenchmarkResult struct {

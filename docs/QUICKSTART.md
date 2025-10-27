@@ -6,8 +6,8 @@ Get up and running with CodexDB in 5 minutes.
 
 ```bash
 # Clone the repository
-git clone https://github.com/evertonmj/go-file-persistence.git
-cd go-file-persistence
+git clone https://github.com/evertonmj/codex.git
+cd codex
 
 # Build the project
 make build
@@ -57,7 +57,7 @@ package main
 import (
     "fmt"
     "log"
-    "go-file-persistence/codex"
+    "github.com/evertonmj/codex/codex"
 )
 
 func main() {
@@ -166,7 +166,7 @@ store.Set("secret", "sensitive data")
 ## Project Structure
 
 ```
-go-file-persistence/
+github.com/evertonmj/codex/
 ├── codex/              # Main package
 ├── cmd/codex-cli/      # CLI tool
 ├── examples/           # Usage examples
@@ -316,7 +316,7 @@ codex.Options{
 - `./bin/codex-cli --help` - CLI help
 - [README.md](README.md) - Full documentation
 - [examples/](examples/) - Code examples
-- [GitHub Issues](https://github.com/evertonmj/go-file-persistence/issues) - Report bugs
+- [GitHub Issues](https://github.com/evertonmj/codex/issues) - Report bugs
 
 ## Tips
 

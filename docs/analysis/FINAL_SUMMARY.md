@@ -235,7 +235,7 @@ make version           # Version info
 ```bash
 # Clone and build
 git clone <repo>
-cd go-file-persistence
+cd codex
 make build
 
 # Run tests

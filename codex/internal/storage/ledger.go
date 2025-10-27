@@ -8,8 +8,8 @@ import (
 	"io"
 	"os"
 
-	"go-file-persistence/codex/internal/compression"
-	"go-file-persistence/codex/internal/encryption"
+	"github.com/evertonmj/codex/codex/internal/compression"
+	"github.com/evertonmj/codex/codex/internal/encryption"
 )
 
 // Ledger implements the Storer interface for append-only ledger persistence.

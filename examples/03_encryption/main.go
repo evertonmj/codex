@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"go-file-persistence/codex"
+	"github.com/evertonmj/codex/codex"
 )
 
 func main() {

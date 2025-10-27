@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"go-file-persistence/codex"
+	"github.com/evertonmj/codex/codex"
 )
 
 func TestBackupAndRecoveryExample(t *testing.T) {

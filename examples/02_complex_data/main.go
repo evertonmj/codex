@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"go-file-persistence/codex"
+	"github.com/evertonmj/codex/codex"
 )
 
 type User struct {

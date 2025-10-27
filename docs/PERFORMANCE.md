@@ -241,7 +241,7 @@ go tool trace trace.out
 ```go
 import (
     "time"
-    "go-file-persistence/codex"
+    "github.com/evertonmj/codex/codex"
 )
 
 func monitoredOperation(store *codex.Store, key string, value interface{}) error {

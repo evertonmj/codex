@@ -30,7 +30,7 @@ CodexDB uses **AES in GCM mode** (Galois/Counter Mode) for authenticated encrypt
 import (
     "crypto/rand"
     "log"
-    "go-file-persistence/codex"
+    "github.com/evertonmj/codex/codex"
 )
 
 func main() {

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"go-file-persistence/codex/internal/atomic"
-	"go-file-persistence/codex/internal/compression"
-	"go-file-persistence/codex/internal/encryption"
-	"go-file-persistence/codex/internal/integrity"
+	"github.com/evertonmj/codex/codex/internal/atomic"
+	"github.com/evertonmj/codex/codex/internal/compression"
+	"github.com/evertonmj/codex/codex/internal/encryption"
+	"github.com/evertonmj/codex/codex/internal/integrity"
 )
 
 // Snapshot implements the Storer interface for snapshot-based persistence.

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"go-file-persistence/codex"
+	"github.com/evertonmj/codex/codex"
 )
 
 func TestIntegration_SnapshotMode(t *testing.T) {

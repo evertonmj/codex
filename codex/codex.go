@@ -42,11 +42,11 @@ import (
 	"path/filepath"
 	"sync"
 
-	"go-file-persistence/codex/internal/backup"
-	"go-file-persistence/codex/internal/batch"
-	"go-file-persistence/codex/internal/compression"
-	"go-file-persistence/codex/internal/path"
-	"go-file-persistence/codex/internal/storage"
+	"github.com/evertonmj/codex/codex/internal/backup"
+	"github.com/evertonmj/codex/codex/internal/batch"
+	"github.com/evertonmj/codex/codex/internal/compression"
+	"github.com/evertonmj/codex/codex/internal/path"
+	"github.com/evertonmj/codex/codex/internal/storage"
 )
 
 // CompressionType defines the compression algorithm to use.

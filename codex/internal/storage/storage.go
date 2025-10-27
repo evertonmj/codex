@@ -14,7 +14,7 @@ package storage
 import (
 	"encoding/json"
 
-	"go-file-persistence/codex/internal/compression"
+	"github.com/evertonmj/codex/codex/internal/compression"
 )
 
 // PersistOp defines the type of operation for the ledger.

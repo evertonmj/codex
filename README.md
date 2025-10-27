@@ -68,8 +68,8 @@ For an index of all documentation, see **[docs/README.md](docs/README.md)**.
 
 ```bash
 # Clone the repository
-git clone https://github.com/evertonmj/go-file-persistence.git
-cd go-file-persistence
+git clone https://github.com/evertonmj/codex.git
+cd codex
 
 # See all available commands
 make help
@@ -94,11 +94,11 @@ See [MAKEFILE.md](MAKEFILE.md) for complete Makefile documentation.
 
 ```bash
 # Using go get
-go get github.com/evertonmj/go-file-persistence/codex
+go get github.com/evertonmj/codex/codex
 
 # Or clone and build manually
-git clone https://github.com/evertonmj/go-file-persistence.git
-cd go-file-persistence
+git clone https://github.com/evertonmj/codex.git
+cd codex
 go build -o bin/codex-cli ./cmd/codex-cli
 ```
 
@@ -115,7 +115,7 @@ package main
 import (
     "fmt"
     "log"
-    "go-file-persistence/codex"
+    "github.com/evertonmj/codex/codex"
 )
 
 func main() {
@@ -154,13 +154,13 @@ Add CodexDB to your Go project:
 
 ```bash
 cd your-project
-go get github.com/evertonmj/go-file-persistence/codex
+go get github.com/evertonmj/codex/codex
 ```
 
 Then import in your code:
 
 ```go
-import "github.com/evertonmj/go-file-persistence/codex"
+import "github.com/evertonmj/codex/codex"
 ```
 
 ### Method 2: Clone Repository
@@ -169,8 +169,8 @@ For development or to run examples:
 
 ```bash
 # Clone the repository
-git clone https://github.com/evertonmj/go-file-persistence.git
-cd go-file-persistence
+git clone https://github.com/evertonmj/codex.git
+cd codex
 
 # Run tests to verify installation
 go test ./...
@@ -190,26 +190,26 @@ If you want to use it as a local module:
 ```bash
 # In your project directory
 mkdir vendor
-git clone https://github.com/evertonmj/go-file-persistence.git vendor/codex
+git clone https://github.com/evertonmj/codex.git vendor/codex
 ```
 
 Update your `go.mod`:
 ```
-replace go-file-persistence => ./vendor/codex
+replace github.com/evertonmj/codex => ./vendor/codex
 ```
 
 ### Verify Installation
 
 ```bash
 # Check if module is accessible
-go list -m github.com/evertonmj/go-file-persistence/codex
+go list -m github.com/evertonmj/codex/codex
 
 # Run a simple test
 cat > test.go << 'EOF'
 package main
 import (
     "fmt"
-    "go-file-persistence/codex"
+    "github.com/evertonmj/codex/codex"
 )
 func main() {
     store, _ := codex.New("test.db")
@@ -506,7 +506,7 @@ wg.Wait()
 ### 5. Error Handling with Custom Error Types
 
 ```go
-import "go-file-persistence/codex/internal/errors"
+import "github.com/evertonmj/codex/codex/internal/errors"
 
 // Comprehensive error handling
 var value string
@@ -527,7 +527,7 @@ if err != nil {
 Built-in structured logging:
 
 ```go
-import "go-file-persistence/codex/internal/logger"
+import "github.com/evertonmj/codex/codex/internal/logger"
 
 // Create a logger
 log, err := logger.New("codex.log", logger.LevelInfo)
@@ -577,7 +577,7 @@ CodexDB follows a clean, modular architecture:
 ### Package Structure
 
 ```
-go-file-persistence/
+github.com/evertonmj/codex/
 ├── codex/                      # Main package
 │   ├── codex.go               # Public API
 │   ├── *_test.go              # Tests
@@ -808,8 +808,8 @@ Contributions are welcome! Please follow these guidelines:
 
 ```bash
 # Clone repository
-git clone https://github.com/evertonmj/go-file-persistence.git
-cd go-file-persistence
+git clone https://github.com/evertonmj/codex.git
+cd codex
 
 # Run tests
 go test ./...
@@ -836,9 +836,9 @@ This project is licensed under the Mozilla Public License Version 2.0. See the [
 
 ## 📮 Contact & Support
 
-- **Issues**: [GitHub Issues](https://github.com/evertonmj/go-file-persistence/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/evertonmj/go-file-persistence/discussions)
-- **Documentation**: [Wiki](https://github.com/evertonmj/go-file-persistence/wiki)
+- **Issues**: [GitHub Issues](https://github.com/evertonmj/codex/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/evertonmj/codex/discussions)
+- **Documentation**: [Wiki](https://github.com/evertonmj/codex/wiki)
 
 ## 🗺️ Roadmap
 

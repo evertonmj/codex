@@ -254,9 +254,9 @@ purge: ## Purge everything: clean all artifacts, Go cache, modules, rebuild and 
 	@rm -f go.sum
 	@echo "$(COLOR_GREEN)✓ Go modules removed$(COLOR_RESET)"
 	@echo ""
-	@echo "$(COLOR_YELLOW)Downloading fresh Go modules...$(COLOR_RESET)"
-	@$(GO) mod download
-	@echo "$(COLOR_GREEN)✓ Fresh modules downloaded$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Tidying Go modules (downloading and updating go.sum)...$(COLOR_RESET)"
+	@$(GO) mod tidy
+	@echo "$(COLOR_GREEN)✓ Fresh modules downloaded and go.sum updated$(COLOR_RESET)"
 	@echo ""
 	@echo "$(COLOR_YELLOW)Rebuilding binaries...$(COLOR_RESET)"
 	@$(MAKE) --no-print-directory build

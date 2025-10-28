@@ -24,6 +24,7 @@ func TestSnapshot(t *testing.T) {
 		if err != nil {
 			t.Fatalf("NewSnapshot() failed: %v", err)
 		}
+		defer s.Close()
 
 		if err := s.Persist(req); err != nil {
 			t.Fatalf("Persist() failed: %v", err)
@@ -46,6 +47,7 @@ func TestSnapshot(t *testing.T) {
 		if err != nil {
 			t.Fatalf("NewSnapshot() failed: %v", err)
 		}
+		defer s.Close()
 
 		if err := s.Persist(req); err != nil {
 			t.Fatalf("Persist() failed: %v", err)

@@ -5,20 +5,35 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/evertonmj/codex/codex/internal/atomic"
-	"github.com/evertonmj/codex/codex/internal/compression"
-	"github.com/evertonmj/codex/codex/internal/encryption"
-	"github.com/evertonmj/codex/codex/internal/integrity"
+	"github.com/evertonmj/codex/codex/src/atomic"
+	"github.com/evertonmj/codex/codex/src/compression"
+	"github.com/evertonmj/codex/codex/src/encryption"
+	"github.com/evertonmj/codex/codex/src/filelock"
+	"github.com/evertonmj/codex/codex/src/integrity"
 )
 
 // Snapshot implements the Storer interface for snapshot-based persistence.
 type Snapshot struct {
-	opts Options
+	opts     Options
+	lockFile *os.File
 }
 
-// NewSnapshot creates a new Snapshot storer.
+// NewSnapshot creates a new Snapshot storer with exclusive file locking.
 func NewSnapshot(opts Options) (*Snapshot, error) {
-	return &Snapshot{opts: opts}, nil
+	// Create a lock file to prevent concurrent access
+	lockPath := opts.Path + ".lock"
+	lockFile, err := os.OpenFile(lockPath, os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open lock file: %w", err)
+	}
+
+	// Acquire exclusive lock to prevent concurrent writes from multiple processes
+	if err := filelock.Lock(lockFile); err != nil {
+		lockFile.Close()
+		return nil, fmt.Errorf("failed to lock snapshot file: %w", err)
+	}
+
+	return &Snapshot{opts: opts, lockFile: lockFile}, nil
 }
 
 // Load reads, decompresses, decrypts, and verifies a data snapshot from disk.
@@ -114,7 +129,12 @@ func (s *Snapshot) PersistBatch(reqs []PersistRequest) error {
 	return s.Persist(PersistRequest{Data: finalData})
 }
 
-// Close is a no-op for the snapshot storer.
+// Close releases the file lock and closes the lock file.
 func (s *Snapshot) Close() error {
+	if s.lockFile != nil {
+		// Release the lock before closing
+		filelock.Unlock(s.lockFile) // Ignore error as file is being closed anyway
+		return s.lockFile.Close()
+	}
 	return nil
 }

@@ -178,7 +178,7 @@ func (s *Store) persist(req storage.PersistRequest) error {
 }
 ```
 
-### 4. Backup Thread-Safety (codex/internal/backup/backup.go)
+### 4. Backup Thread-Safety (codex/src/backup/backup.go)
 
 Added sync.Mutex to protect concurrent backup rotation:
 

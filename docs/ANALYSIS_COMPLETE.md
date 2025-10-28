@@ -279,7 +279,7 @@ session management, and local data persistence.
 ## Files Modified/Created
 
 ### 🔧 Code Changes
-- `codex/internal/backup/backup.go` - Fixed permissions (1 line change)
+- `codex/src/backup/backup.go` - Fixed permissions (1 line change)
 
 ### 📝 Documentation Created
 - `SECURITY.md` - 1200+ lines

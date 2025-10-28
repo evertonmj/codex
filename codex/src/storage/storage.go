@@ -14,8 +14,12 @@ package storage
 import (
 	"encoding/json"
 
-	"github.com/evertonmj/codex/codex/internal/compression"
+	"github.com/evertonmj/codex/codex/src/compression"
+	"github.com/evertonmj/codex/codex/src/filelock"
 )
+
+// Re-export filelock.ErrLocked for convenience
+var ErrLocked = filelock.ErrLocked
 
 // PersistOp defines the type of operation for the ledger.
 type PersistOp int

@@ -37,16 +37,33 @@ package codex
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 
-	"github.com/evertonmj/codex/codex/internal/backup"
-	"github.com/evertonmj/codex/codex/internal/batch"
-	"github.com/evertonmj/codex/codex/internal/compression"
-	"github.com/evertonmj/codex/codex/internal/path"
-	"github.com/evertonmj/codex/codex/internal/storage"
+	"github.com/evertonmj/codex/codex/src/backup"
+	"github.com/evertonmj/codex/codex/src/batch"
+	"github.com/evertonmj/codex/codex/src/compression"
+	"github.com/evertonmj/codex/codex/src/path"
+	"github.com/evertonmj/codex/codex/src/storage"
+)
+
+// Sentinel errors for common error conditions.
+// These can be checked using errors.Is() for programmatic error handling.
+var (
+	// ErrNotFound is returned when a key is not found in the store.
+	ErrNotFound = errors.New("key not found")
+
+	// ErrLocked is returned when the database file is locked by another process.
+	ErrLocked = errors.New("database is locked by another process")
+
+	// ErrInvalidKey is returned when an encryption key has an invalid size.
+	ErrInvalidKey = errors.New("invalid encryption key size: must be 16, 24, or 32 bytes")
+
+	// ErrCorrupted is returned when data integrity verification fails.
+	ErrCorrupted = errors.New("data integrity check failed: database may be corrupted")
 )
 
 // CompressionType defines the compression algorithm to use.
@@ -110,7 +127,7 @@ func NewWithOptions(path string, opts Options) (*Store, error) {
 	if opts.EncryptionKey != nil {
 		keyLen := len(opts.EncryptionKey)
 		if keyLen != 16 && keyLen != 24 && keyLen != 32 {
-			return nil, fmt.Errorf("invalid encryption key size: must be 16, 24, or 32 bytes")
+			return nil, ErrInvalidKey
 		}
 	}
 
@@ -134,6 +151,10 @@ func NewWithOptions(path string, opts Options) (*Store, error) {
 		storer, err = storage.NewSnapshot(storageOpts)
 	}
 	if err != nil {
+		// Wrap filelock errors with our sentinel error
+		if errors.Is(err, storage.ErrLocked) {
+			return nil, ErrLocked
+		}
 		return nil, err
 	}
 
@@ -180,13 +201,14 @@ func (s *Store) Set(key string, value interface{}) error {
 }
 
 // Get retrieves a value for the given key.
+// Returns ErrNotFound if the key does not exist.
 func (s *Store) Get(key string, value interface{}) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	data, exists := s.data[key]
 	if !exists {
-		return fmt.Errorf("key not found: %s", key)
+		return fmt.Errorf("%w: %s", ErrNotFound, key)
 	}
 	return json.Unmarshal(data, value)
 }

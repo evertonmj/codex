@@ -150,31 +150,31 @@ Status: ✅ ZERO RACE CONDITIONS DETECTED
 
 ### Encryption Tests
 ```bash
-go test ./codex/internal/encryption -v
+go test ./codex/src/encryption -v
 ```
 ✅ PASS - AES-GCM implementation correct
 
 ### Integrity Tests
 ```bash
-go test ./codex/internal/integrity -v
+go test ./codex/src/integrity -v
 ```
 ✅ PASS - SHA256 checksums working
 
 ### Atomic Write Tests
 ```bash
-go test ./codex/internal/atomic -v
+go test ./codex/src/atomic -v
 ```
 ✅ PASS - Write-rename pattern working
 
 ### Backup Tests (Post-Fix)
 ```bash
-go test ./codex/internal/backup -v -race
+go test ./codex/src/backup -v -race
 ```
 ✅ PASS - File permissions fixed to 0600
 
 ### Backup Permission Verification
 ```bash
-grep -n "0600" codex/internal/backup/backup.go
+grep -n "0600" codex/src/backup/backup.go
 # Result: Line 69 now uses 0600 ✅
 ```
 

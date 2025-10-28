@@ -104,15 +104,15 @@ All critical issues fixed. All tests passing. Safe for production deployment.
 
 ```
 ✅ codex                           23.605s (concurrent tests + performance)
-✅ codex/internal/atomic           cached
-✅ codex/internal/backup           cached
-✅ codex/internal/batch            cached
-✅ codex/internal/compression      cached
-✅ codex/internal/encryption       cached
-✅ codex/internal/errors           cached
-✅ codex/internal/integrity        cached
-✅ codex/internal/logger           cached
-✅ codex/internal/storage          cached
+✅ codex/src/atomic           cached
+✅ codex/src/backup           cached
+✅ codex/src/batch            cached
+✅ codex/src/compression      cached
+✅ codex/src/encryption       cached
+✅ codex/src/errors           cached
+✅ codex/src/integrity        cached
+✅ codex/src/logger           cached
+✅ codex/src/storage          cached
 ✅ examples/01_basic_usage         0.159s
 ✅ examples/02_complex_data        0.153s
 ✅ examples/03_encryption          0.090s

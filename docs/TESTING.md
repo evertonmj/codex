@@ -41,12 +41,12 @@ go test -cover ./...
 go test ./codex
 
 # Internal packages
-go test ./codex/internal/errors
-go test ./codex/internal/logger
-go test ./codex/internal/encryption
-go test ./codex/internal/storage
-go test ./codex/internal/integrity
-go test ./codex/internal/backup
+go test ./codex/src/errors
+go test ./codex/src/logger
+go test ./codex/src/encryption
+go test ./codex/src/storage
+go test ./codex/src/integrity
+go test ./codex/src/backup
 ```
 
 ### Specific Test Functions
@@ -66,7 +66,7 @@ go test ./codex -run Test -skip Integration
 
 ### 1. Unit Tests
 
-Location: `codex/codex_test.go` and `codex/internal/*/test.go`
+Location: `codex/codex_test.go` and `codex/src/*/test.go`
 
 Test individual functions and methods in isolation:
 
@@ -174,7 +174,7 @@ Tests that verify error handling:
 Tests for the custom error system:
 
 ```bash
-go test ./codex/internal/errors -v
+go test ./codex/src/errors -v
 ```
 
 Coverage: **100%**
@@ -190,7 +190,7 @@ Features tested:
 Tests for structured logging:
 
 ```bash
-go test ./codex/internal/logger -v
+go test ./codex/src/logger -v
 ```
 
 Coverage: **98.4%**
@@ -207,7 +207,7 @@ Features tested:
 Tests for AES-GCM encryption:
 
 ```bash
-go test ./codex/internal/encryption -v
+go test ./codex/src/encryption -v
 ```
 
 Coverage: **85%**
@@ -224,7 +224,7 @@ Features tested:
 Tests for checksum verification:
 
 ```bash
-go test ./codex/internal/integrity -v
+go test ./codex/src/integrity -v
 ```
 
 Coverage: **94.1%**
@@ -239,7 +239,7 @@ Features tested:
 Tests for snapshot and ledger modes:
 
 ```bash
-go test ./codex/internal/storage -v
+go test ./codex/src/storage -v
 ```
 
 Coverage: **80.9%**

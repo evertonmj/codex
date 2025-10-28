@@ -28,7 +28,7 @@ CodexDB demonstrates **excellent engineering practices** and is ready for produc
 
 ### Issue: Backup File Permissions (0644 → 0600)
 
-**Location:** `codex/internal/backup/backup.go:69`
+**Location:** `codex/src/backup/backup.go:69`
 
 **Current Code:**
 ```go
@@ -674,7 +674,7 @@ Looking for feedback from the Go community!
 
 1. **🔴 CRITICAL:** Fix backup file permissions to 0600
    ```go
-   // In codex/internal/backup/backup.go line 69
+   // In codex/src/backup/backup.go line 69
    if err := os.WriteFile(newBackupPath, data, 0600); err != nil {
    ```
 

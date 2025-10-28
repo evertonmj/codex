@@ -12,7 +12,36 @@ CodexDB implements enterprise-grade security features to protect your data:
 
 ## Security Features
 
-### 1. Encryption
+### 1. Multi-Process Safety
+
+**NEW in v1.1:** CodexDB now includes OS-level file locking to prevent concurrent access from multiple processes:
+
+- **Exclusive Locks**: Only one process can open a database at a time
+- **Cross-Platform**: Works on Unix (flock) and Windows (LockFileEx)
+- **Automatic**: Locks are acquired on open and released on close
+- **Error Detection**: Attempts to open a locked database return `codex.ErrLocked`
+
+#### Multi-Process Usage
+
+```go
+// Process 1
+store1, err := codex.New("data.db")
+if err != nil {
+    log.Fatal(err)
+}
+defer store1.Close()
+
+// Process 2 (different binary or goroutine won't work - this is process-level)
+store2, err := codex.New("data.db")
+if errors.Is(err, codex.ErrLocked) {
+    log.Println("Database is locked by another process")
+    // Wait and retry, or use a different approach
+}
+```
+
+**IMPORTANT**: CodexDB uses advisory locks which protect against accidental concurrent access but not malicious actors. Never expose database files to untrusted processes.
+
+### 2. Encryption
 
 CodexDB uses **AES in GCM mode** (Galois/Counter Mode) for authenticated encryption with associated data (AEAD).
 
@@ -68,37 +97,68 @@ func deriveKey(password string, salt []byte) []byte {
 }
 ```
 
-### 2. Integrity Protection
+### 3. Integrity Protection & Corruption Recovery
 
-All data is protected with **SHA256 checksums**:
+**ENHANCED in v1.1:** All data is now protected with **SHA256 checksums** at multiple levels:
 
+#### Snapshot Mode
 - Checksums are calculated before encryption (defense in depth)
-- Checksums are verified on every load
+- Entire database checksum verified on every load
 - Tampering is immediately detected
+
+#### Ledger Mode (NEW)
+- **Per-entry checksums**: Every ledger entry has its own SHA256 checksum
+- **Graceful recovery**: Corrupted entries are detected and truncated
+- **Data preservation**: Valid entries before corruption are recovered
+- **Automatic repair**: File is truncated at first corrupted entry
 
 This protects against:
 - ✅ Bit flips from hardware errors
-- ✅ Corruption during storage
+- ✅ Corruption during storage or mid-write crashes
 - ✅ Malicious tampering
 - ✅ Truncation or deletion
+- ✅ Partial writes from power loss
 
-### 3. Atomic File Operations
+Example of corruption recovery in ledger mode:
 
-Database files use the **write-rename pattern** for atomicity:
+```go
+// Ledger with 3 entries: A, B, C
+// If entry C is corrupted (power loss during write):
+// - Load() detects corruption via checksum
+// - Recovers entries A and B
+// - Truncates file at corruption point
+// - New entries can be written immediately
+```
 
+### 4. Atomic File Operations & Durability
+
+**ENHANCED in v1.1:** Database files use the **write-rename-sync pattern** for guaranteed durability:
+
+#### Snapshot Mode
 ```
 1. Write to temporary file in same directory
-2. Flush to disk (fsync)
-3. Atomically rename to target
-4. Sync directory for durability
+2. Flush file to disk (fsync)
+3. Close file
+4. Atomically rename to target
+5. Sync parent directory (ensures rename is durable)
+```
+
+#### Ledger Mode (NEW: fsync every write)
+```
+1. Append entry to ledger file
+2. Flush to disk (fsync) - EVERY write is durable
+3. Continue (file remains open)
 ```
 
 This ensures the database file is **always in a consistent state**, even if:
 - ✅ Process crashes mid-write
 - ✅ System power loss occurs
 - ✅ Filesystem error occurs
+- ✅ Storage device is suddenly disconnected
 
-### 4. File Permissions
+**Performance Note**: Ledger mode now fsyncs every write for maximum durability. For high-throughput scenarios, use batch operations which batch multiple entries before syncing.
+
+### 5. File Permissions
 
 All files are created with **secure permissions**:
 
@@ -239,13 +299,13 @@ CodexDB includes security testing:
 go test -race ./...
 
 # Encryption correctness
-go test ./codex/internal/encryption -v
+go test ./codex/src/encryption -v
 
 # Integrity check verification
-go test ./codex/internal/integrity -v
+go test ./codex/src/integrity -v
 
 # Atomic write correctness
-go test ./codex/internal/atomic -v
+go test ./codex/src/atomic -v
 ```
 
 ## Dependencies Security

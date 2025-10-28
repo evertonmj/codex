@@ -57,15 +57,15 @@ This release fixes critical lock contention issues in CodexDB, making it product
 ```
 18 packages total:
   ✅ codex (23.605s - includes concurrent tests)
-  ✅ codex/internal/atomic
-  ✅ codex/internal/backup
-  ✅ codex/internal/batch
-  ✅ codex/internal/compression
-  ✅ codex/internal/encryption
-  ✅ codex/internal/errors
-  ✅ codex/internal/integrity
-  ✅ codex/internal/logger
-  ✅ codex/internal/storage
+  ✅ codex/src/atomic
+  ✅ codex/src/backup
+  ✅ codex/src/batch
+  ✅ codex/src/compression
+  ✅ codex/src/encryption
+  ✅ codex/src/errors
+  ✅ codex/src/integrity
+  ✅ codex/src/logger
+  ✅ codex/src/storage
   ✅ examples/01_basic_usage
   ✅ examples/02_complex_data
   ✅ examples/03_encryption
@@ -149,7 +149,7 @@ bb317cf fix: Implement dual-mutex concurrency pattern
 ### Updated Files
 - `Makefile` - New `purge` target for complete rebuild
 - `codex/codex.go` - Core concurrency fixes
-- `codex/internal/backup/backup.go` - Thread-safe rotation
+- `codex/src/backup/backup.go` - Thread-safe rotation
 
 ---
 

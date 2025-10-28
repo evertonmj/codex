@@ -27,12 +27,15 @@ CodexDB is now **production-grade** with enterprise-level concurrency support:
 - 🗜️ **Compression**: Multiple algorithms (Gzip, Zstd, Snappy) to reduce storage costs
 - ⚡ **Batch Operations**: Atomic bulk operations for 10-50x performance boost
 - 🔧 **Atomic File Operations**: Crash-safe writes prevent data corruption
-- ✅ **Data Integrity**: SHA256 checksums protect against corruption
+- ✅ **Data Integrity**: SHA256 checksums with per-entry validation (Ledger mode)
 - 🔄 **Automatic Backups**: Rotating backup files for disaster recovery
 - 🧵 **Thread-Safe**: Built-in concurrency support with internal locking
+- 🔐 **Multi-Process Safety**: OS-level file locking prevents concurrent access
+- 🛡️ **Corruption Recovery**: Graceful recovery from partial writes and corruption
+- 💪 **Guaranteed Durability**: fsync on every write ensures zero data loss
 - 🎯 **Minimal Dependencies**: Uses mostly Go standard library
 - 📝 **Structured Logging**: Built-in logging system for operations and errors
-- 🛡️ **Type-Safe Errors**: Comprehensive error handling with context
+- 🛡️ **Sentinel Errors**: Type-safe error handling with `errors.Is()`
 - 🎨 **CLI Tool**: Full-featured command-line interface included
 
 ## 📋 Table of Contents
@@ -335,6 +338,54 @@ store.Delete("active")
 store.Clear()
 ```
 
+### Error Handling with Sentinel Errors
+
+**NEW in v1.1:** CodexDB exports sentinel errors for better error handling:
+
+```go
+import (
+    "errors"
+    "github.com/evertonmj/codex/codex"
+)
+
+// Check if a key exists using ErrNotFound
+var config string
+err := store.Get("config", &config)
+if errors.Is(err, codex.ErrNotFound) {
+    // Key doesn't exist, use default
+    config = "default_value"
+    store.Set("config", config)
+} else if err != nil {
+    // Other error occurred
+    log.Fatal(err)
+}
+
+// Handle locked database
+store2, err := codex.New("data.db")
+if errors.Is(err, codex.ErrLocked) {
+    log.Println("Database is locked by another process")
+    // Wait and retry, or exit gracefully
+} else if err != nil {
+    log.Fatal(err)
+}
+
+// Validate encryption key size
+invalidKey := make([]byte, 15) // Invalid size
+_, err = codex.NewWithOptions("data.db", codex.Options{
+    EncryptionKey: invalidKey,
+})
+if errors.Is(err, codex.ErrInvalidKey) {
+    log.Println("Encryption key must be 16, 24, or 32 bytes")
+}
+```
+
+**Available Sentinel Errors:**
+
+- `codex.ErrNotFound` - Key doesn't exist in the store
+- `codex.ErrLocked` - Database is locked by another process
+- `codex.ErrInvalidKey` - Encryption key has invalid size
+- `codex.ErrCorrupted` - Data integrity check failed
+
 ### Working with Complex Types
 
 ```go
@@ -566,7 +617,7 @@ wg.Wait()
 ### 5. Error Handling with Custom Error Types
 
 ```go
-import "github.com/evertonmj/codex/codex/internal/errors"
+import "github.com/evertonmj/codex/codex/src/errors"
 
 // Comprehensive error handling
 var value string
@@ -587,7 +638,7 @@ if err != nil {
 Built-in structured logging:
 
 ```go
-import "github.com/evertonmj/codex/codex/internal/logger"
+import "github.com/evertonmj/codex/codex/src/logger"
 
 // Create a logger
 log, err := logger.New("codex.log", logger.LevelInfo)
@@ -641,7 +692,7 @@ github.com/evertonmj/codex/
 ├── codex/                      # Main package
 │   ├── codex.go               # Public API
 │   ├── *_test.go              # Tests
-│   └── internal/
+│   └── src/
 │       ├── storage/           # Persistence strategies
 │       │   ├── snapshot.go    # Snapshot mode
 │       │   └── ledger.go      # Ledger mode
@@ -774,8 +825,8 @@ go tool cover -func=coverage.out
 ```bash
 # Test specific package
 go test ./codex
-go test ./codex/internal/encryption
-go test ./codex/internal/storage
+go test ./codex/src/encryption
+go test ./codex/src/storage
 
 # Run specific test
 go test ./codex -run TestSetAndGet

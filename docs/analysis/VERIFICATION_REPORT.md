@@ -52,15 +52,15 @@ Test Execution Time: ~165 seconds
 
 | Package | Tests | Status | Time |
 |---------|-------|--------|------|
-| codex/internal/atomic | ✅ | 7 passed | 0.235s |
-| codex/internal/backup | ✅ | 1 passed | 0.074s |
-| codex/internal/batch | ✅ | 8 passed | 0.016s |
-| codex/internal/compression | ✅ | 11 passed | 1.883s |
-| codex/internal/encryption | ✅ | 8 passed | 0.012s |
-| codex/internal/errors | ✅ | 5 passed | 0.009s |
-| codex/internal/integrity | ✅ | 2 passed | 0.010s |
-| codex/internal/logger | ✅ | 9 passed | 0.059s |
-| codex/internal/storage | ✅ | 7 passed | 0.055s |
+| codex/src/atomic | ✅ | 7 passed | 0.235s |
+| codex/src/backup | ✅ | 1 passed | 0.074s |
+| codex/src/batch | ✅ | 8 passed | 0.016s |
+| codex/src/compression | ✅ | 11 passed | 1.883s |
+| codex/src/encryption | ✅ | 8 passed | 0.012s |
+| codex/src/errors | ✅ | 5 passed | 0.009s |
+| codex/src/integrity | ✅ | 2 passed | 0.010s |
+| codex/src/logger | ✅ | 9 passed | 0.059s |
+| codex/src/storage | ✅ | 7 passed | 0.055s |
 
 #### Examples - All Working
 

@@ -47,7 +47,7 @@ CodexDB has been thoroughly analyzed and is ready for production deployment and 
 
 **File Modified:**
 ```
-codex/internal/backup/backup.go:69
+codex/src/backup/backup.go:69
 Changed: 0644 -> 0600
 ```
 

@@ -568,3 +568,239 @@ func TestInvalidJSONHandling(t *testing.T) {
 		t.Fatal("expected error when setting un-marshalable value")
 	}
 }
+
+func TestPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	storePath := filepath.Join(tmpDir, "test.db")
+
+	store, err := New(storePath)
+	if err != nil {
+		t.Fatalf("New() failed: %v", err)
+	}
+	defer store.Close()
+
+	// Test Path() method
+	returnedPath := store.Path()
+	if returnedPath != storePath {
+		t.Errorf("expected path %s, got %s", storePath, returnedPath)
+	}
+}
+
+func TestNewHome(t *testing.T) {
+	t.Run("creates store in home directory with default name", func(t *testing.T) {
+		store, err := NewHome("")
+		if err != nil {
+			t.Fatalf("NewHome() failed: %v", err)
+		}
+		defer store.Close()
+
+		// Verify the path contains codex directory
+		path := store.Path()
+		if !strings.Contains(path, filepath.Join("codex", "codex_")) {
+			t.Errorf("expected path to contain codex directory, got %s", path)
+		}
+
+		// Verify we can use the store
+		if err := store.Set("test", "value"); err != nil {
+			t.Fatalf("Set failed: %v", err)
+		}
+
+		var result string
+		if err := store.Get("test", &result); err != nil {
+			t.Fatalf("Get failed: %v", err)
+		}
+
+		if result != "value" {
+			t.Errorf("expected 'value', got '%s'", result)
+		}
+	})
+
+	t.Run("creates store in home directory with custom name", func(t *testing.T) {
+		store, err := NewHome("mydb")
+		if err != nil {
+			t.Fatalf("NewHome() failed: %v", err)
+		}
+		defer store.Close()
+
+		// Verify the path contains both codex directory and mydb name
+		path := store.Path()
+		if !strings.Contains(path, "codex") || !strings.Contains(path, "mydb") {
+			t.Errorf("expected path to contain codex directory and mydb name, got %s", path)
+		}
+	})
+}
+
+func TestNewHomeWithOptions(t *testing.T) {
+	t.Run("creates store in home directory with encryption", func(t *testing.T) {
+		key := make([]byte, 32)
+		opts := Options{EncryptionKey: key}
+
+		store, err := NewHomeWithOptions("encrypted_db", opts)
+		if err != nil {
+			t.Fatalf("NewHomeWithOptions() failed: %v", err)
+		}
+		defer store.Close()
+
+		// Verify we can use the encrypted store
+		if err := store.Set("secret", "sensitive"); err != nil {
+			t.Fatalf("Set failed: %v", err)
+		}
+
+		var result string
+		if err := store.Get("secret", &result); err != nil {
+			t.Fatalf("Get failed: %v", err)
+		}
+
+		if result != "sensitive" {
+			t.Errorf("expected 'sensitive', got '%s'", result)
+		}
+	})
+}
+
+func TestBatchSize(t *testing.T) {
+	tmpDir := t.TempDir()
+	storePath := filepath.Join(tmpDir, "test.db")
+
+	store, err := New(storePath)
+	if err != nil {
+		t.Fatalf("New() failed: %v", err)
+	}
+	defer store.Close()
+
+	batch := store.NewBatch()
+
+	// Test Size() on empty batch
+	if batch.Size() != 0 {
+		t.Errorf("expected empty batch size to be 0, got %d", batch.Size())
+	}
+
+	// Add some operations
+	batch.Set("key1", "value1")
+	batch.Set("key2", "value2")
+	batch.Delete("key3")
+
+	// Test Size() after adding operations
+	expectedSize := 3
+	if batch.Size() != expectedSize {
+		t.Errorf("expected batch size to be %d, got %d", expectedSize, batch.Size())
+	}
+}
+
+func TestBatchSetWithErrors(t *testing.T) {
+	tmpDir := t.TempDir()
+	storePath := filepath.Join(tmpDir, "test.db")
+
+	store, err := New(storePath)
+	if err != nil {
+		t.Fatalf("New() failed: %v", err)
+	}
+	defer store.Close()
+
+	// Test BatchSet with un-marshalable value
+	items := map[string]interface{}{
+		"key1": "value1",
+		"key2": make(chan int), // This cannot be marshaled
+	}
+
+	err = store.BatchSet(items)
+	if err == nil {
+		t.Fatal("expected error when batch setting un-marshalable value")
+	}
+}
+
+func TestBatchGetWithMissingKeys(t *testing.T) {
+	tmpDir := t.TempDir()
+	storePath := filepath.Join(tmpDir, "test.db")
+
+	store, err := New(storePath)
+	if err != nil {
+		t.Fatalf("New() failed: %v", err)
+	}
+	defer store.Close()
+
+	// Set some data
+	store.Set("key1", "value1")
+	store.Set("key2", "value2")
+
+	// BatchGet with mix of existing and non-existing keys
+	keys := []string{"key1", "missing_key", "key2"}
+	result, err := store.BatchGet(keys)
+	if err != nil {
+		t.Fatalf("BatchGet failed: %v", err)
+	}
+
+	// Should only have the existing keys
+	if len(result) != 2 {
+		t.Errorf("expected 2 results, got %d", len(result))
+	}
+
+	if val, exists := result["key1"]; !exists || val != "value1" {
+		t.Errorf("expected key1 to be 'value1', got %v", val)
+	}
+
+	if _, exists := result["missing_key"]; exists {
+		t.Error("expected missing_key to not be in results")
+	}
+}
+
+func TestBatchExecuteWithInvalidOperations(t *testing.T) {
+	tmpDir := t.TempDir()
+	storePath := filepath.Join(tmpDir, "test.db")
+
+	store, err := New(storePath)
+	if err != nil {
+		t.Fatalf("New() failed: %v", err)
+	}
+	defer store.Close()
+
+	batch := store.NewBatch()
+	batch.Set("key1", "value1")
+
+	// Execute should work normally
+	if err := batch.Execute(); err != nil {
+		t.Fatalf("batch.Execute() failed: %v", err)
+	}
+
+	// Verify the data was persisted
+	var result string
+	if err := store.Get("key1", &result); err != nil {
+		t.Fatalf("Get failed: %v", err)
+	}
+
+	if result != "value1" {
+		t.Errorf("expected 'value1', got '%s'", result)
+	}
+}
+
+func TestBatchDelete(t *testing.T) {
+	tmpDir := t.TempDir()
+	storePath := filepath.Join(tmpDir, "test.db")
+
+	store, err := New(storePath)
+	if err != nil {
+		t.Fatalf("New() failed: %v", err)
+	}
+	defer store.Close()
+
+	// Set some data
+	store.Set("key1", "value1")
+	store.Set("key2", "value2")
+	store.Set("key3", "value3")
+
+	// Batch delete some keys
+	err = store.BatchDelete([]string{"key1", "key3"})
+	if err != nil {
+		t.Fatalf("BatchDelete failed: %v", err)
+	}
+
+	// Verify deletions
+	if store.Has("key1") {
+		t.Error("expected key1 to be deleted")
+	}
+	if !store.Has("key2") {
+		t.Error("expected key2 to still exist")
+	}
+	if store.Has("key3") {
+		t.Error("expected key3 to be deleted")
+	}
+}

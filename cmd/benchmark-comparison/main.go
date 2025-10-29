@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/redis/go-redis/v9"
 	"github.com/evertonmj/codex/codex"
+	"github.com/redis/go-redis/v9"
 )
 
 type BenchmarkResult struct {

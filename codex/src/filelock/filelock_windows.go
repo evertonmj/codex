@@ -30,9 +30,9 @@ func lock(file *os.File) error {
 	r1, _, err := procLockFileEx.Call(
 		uintptr(file.Fd()),
 		uintptr(lockfileExclusiveLock|lockfileFailImmediately),
-		uintptr(0),                // reserved, must be 0
-		uintptr(0xFFFFFFFF),       // lock low 32 bits (entire file)
-		uintptr(0xFFFFFFFF),       // lock high 32 bits (entire file)
+		uintptr(0),          // reserved, must be 0
+		uintptr(0xFFFFFFFF), // lock low 32 bits (entire file)
+		uintptr(0xFFFFFFFF), // lock high 32 bits (entire file)
 		uintptr(unsafe.Pointer(&overlapped)),
 	)
 
@@ -52,9 +52,9 @@ func unlock(file *os.File) error {
 
 	r1, _, err := procUnlockFileEx.Call(
 		uintptr(file.Fd()),
-		uintptr(0),                // reserved, must be 0
-		uintptr(0xFFFFFFFF),       // unlock low 32 bits
-		uintptr(0xFFFFFFFF),       // unlock high 32 bits
+		uintptr(0),          // reserved, must be 0
+		uintptr(0xFFFFFFFF), // unlock low 32 bits
+		uintptr(0xFFFFFFFF), // unlock high 32 bits
 		uintptr(unsafe.Pointer(&overlapped)),
 	)
 

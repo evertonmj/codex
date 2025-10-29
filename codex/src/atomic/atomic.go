@@ -2,11 +2,11 @@
 // data corruption in case of system failure or power loss.
 //
 // Atomic Write Pattern:
-//   1. Write data to temporary file
-//   2. Flush written data to disk (fsync)
-//   3. Close temporary file
-//   4. Atomically rename to target file
-//   5. Sync parent directory to ensure rename is durable
+//  1. Write data to temporary file
+//  2. Flush written data to disk (fsync)
+//  3. Close temporary file
+//  4. Atomically rename to target file
+//  5. Sync parent directory to ensure rename is durable
 //
 // This pattern ensures that the target file is either completely written
 // with new data or remains unchanged - no partial writes are possible.

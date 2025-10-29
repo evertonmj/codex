@@ -133,7 +133,7 @@ func main() {
 	// Example 8: Batch operations with compression
 	fmt.Println("\n8. Batch Operations with Compression")
 	store8, err := codex.NewWithOptions("compression_batch.db", codex.Options{
-		Compression:      codex.SnappyCompression,
+		Compression: codex.SnappyCompression,
 	})
 	if err != nil {
 		log.Fatal(err)

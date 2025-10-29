@@ -91,12 +91,12 @@ type Options struct {
 
 // Store represents a key-value store.
 type Store struct {
-	path       string
-	data       map[string][]byte
-	mu         sync.RWMutex
-	persistMu  sync.Mutex // Protects file persist operations to prevent concurrent writes
-	storer     storage.Storer
-	options    Options
+	path      string
+	data      map[string][]byte
+	mu        sync.RWMutex
+	persistMu sync.Mutex // Protects file persist operations to prevent concurrent writes
+	storer    storage.Storer
+	options   Options
 }
 
 // New creates a new key-value store at the specified path with default options.
@@ -194,8 +194,8 @@ func (s *Store) Set(key string, value interface{}) error {
 	// Persist without lock (slow I/O operation)
 	// The persist() method will read s.data with a read lock if needed
 	return s.persist(storage.PersistRequest{
-		Op: storage.OpSet,
-		Key: key,
+		Op:    storage.OpSet,
+		Key:   key,
 		Value: data,
 	})
 }
@@ -223,7 +223,7 @@ func (s *Store) Delete(key string) error {
 	// Persist without lock (slow I/O operation)
 	// The persist() method will read s.data with a read lock if needed
 	return s.persist(storage.PersistRequest{
-		Op: storage.OpDelete,
+		Op:  storage.OpDelete,
 		Key: key,
 	})
 }
@@ -489,4 +489,3 @@ func (s *Store) persistBatch(b *batch.Batch) error {
 
 	return s.storer.PersistBatch(reqs)
 }
-

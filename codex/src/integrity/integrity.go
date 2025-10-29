@@ -8,10 +8,10 @@
 //   - Detects bit flips, truncation, and modification
 //
 // Verification Process:
-//   1. Calculate SHA256 of data
-//   2. Create fileFormat with checksum and data
-//   3. Marshal to JSON and store
-//   4. On load, recalculate checksum and verify match
+//  1. Calculate SHA256 of data
+//  2. Create fileFormat with checksum and data
+//  3. Marshal to JSON and store
+//  4. On load, recalculate checksum and verify match
 //
 // Note: Checksum verification is transparent to the user and happens
 // automatically during database load.

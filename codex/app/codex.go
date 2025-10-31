@@ -33,7 +33,7 @@
 //
 // For advanced features, use NewWithOptions to configure encryption,
 // compression, backup rotation, and storage mode.
-package codex
+package app
 
 import (
 	"encoding/json"
@@ -43,11 +43,11 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/evertonmj/codex/codex/src/backup"
-	"github.com/evertonmj/codex/codex/src/batch"
-	"github.com/evertonmj/codex/codex/src/compression"
-	"github.com/evertonmj/codex/codex/src/path"
-	"github.com/evertonmj/codex/codex/src/storage"
+	"github.com/evertonmj/codex/codex/app/src/backup"
+	"github.com/evertonmj/codex/codex/app/src/batch"
+	"github.com/evertonmj/codex/codex/app/src/compression"
+	"github.com/evertonmj/codex/codex/app/src/path"
+	"github.com/evertonmj/codex/codex/app/src/storage"
 )
 
 // Sentinel errors for common error conditions.

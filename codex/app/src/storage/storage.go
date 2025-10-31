@@ -14,8 +14,8 @@ package storage
 import (
 	"encoding/json"
 
-	"github.com/evertonmj/codex/codex/src/compression"
-	"github.com/evertonmj/codex/codex/src/filelock"
+	"github.com/evertonmj/codex/codex/app/src/compression"
+	"github.com/evertonmj/codex/codex/app/src/filelock"
 )
 
 // Re-export filelock.ErrLocked for convenience

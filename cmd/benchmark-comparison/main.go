@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/evertonmj/codex/codex"
+	"github.com/evertonmj/codex/codex/app"
 	"github.com/redis/go-redis/v9"
 )
 

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evertonmj/codex/codex"
+	"github.com/evertonmj/codex/codex/app"
 )
 
 // TestIntegration_ErrorRecovery tests error handling and recovery scenarios

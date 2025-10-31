@@ -228,8 +228,8 @@ if errors.Is(err, codex.ErrNotFound) {
 
 ```bash
 $ go test ./... -short
-ok  	github.com/evertonmj/codex/codex	15.827s
-ok  	github.com/evertonmj/codex/codex/src/storage	0.594s
+ok  	github.com/evertonmj/codex/codex/app	15.827s
+ok  	github.com/evertonmj/codex/codex/app/src/storage	0.594s
 ✅ All 18 test packages PASS
 ```
 
@@ -345,7 +345,7 @@ Batch writes: ~0.1ms per operation (single fsync at end)
 
 ```bash
 # Update go.mod
-go get github.com/evertonmj/codex/codex@v1.1.0
+go get github.com/evertonmj/codex/codex/app@v1.1.0
 
 # Run tests
 go test ./...

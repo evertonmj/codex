@@ -36,12 +36,12 @@ Updated all Go import statements across the entire codebase:
 
 **Before:**
 ```go
-import "github.com/evertonmj/codex/codex/internal/storage"
+import "github.com/evertonmj/codex/codex/app/internal/storage"
 ```
 
 **After:**
 ```go
-import "github.com/evertonmj/codex/codex/src/storage"
+import "github.com/evertonmj/codex/codex/app/src/storage"
 ```
 
 **Files Updated:**
@@ -92,16 +92,16 @@ $ go test ./... -v
 
 **Test Package Results:**
 ```
-ok  	github.com/evertonmj/codex/codex	40.388s
-ok  	github.com/evertonmj/codex/codex/src/atomic	0.531s
-ok  	github.com/evertonmj/codex/codex/src/backup	0.883s
-ok  	github.com/evertonmj/codex/codex/src/batch	0.717s
-ok  	github.com/evertonmj/codex/codex/src/compression	1.073s
-ok  	github.com/evertonmj/codex/codex/src/encryption	1.396s
-ok  	github.com/evertonmj/codex/codex/src/errors	1.565s
-ok  	github.com/evertonmj/codex/codex/src/integrity	0.602s
-ok  	github.com/evertonmj/codex/codex/src/logger	1.249s
-ok  	github.com/evertonmj/codex/codex/src/storage	2.130s
+ok  	github.com/evertonmj/codex/codex/app	40.388s
+ok  	github.com/evertonmj/codex/codex/app/src/atomic	0.531s
+ok  	github.com/evertonmj/codex/codex/app/src/backup	0.883s
+ok  	github.com/evertonmj/codex/codex/app/src/batch	0.717s
+ok  	github.com/evertonmj/codex/codex/app/src/compression	1.073s
+ok  	github.com/evertonmj/codex/codex/app/src/encryption	1.396s
+ok  	github.com/evertonmj/codex/codex/app/src/errors	1.565s
+ok  	github.com/evertonmj/codex/codex/app/src/integrity	0.602s
+ok  	github.com/evertonmj/codex/codex/app/src/logger	1.249s
+ok  	github.com/evertonmj/codex/codex/app/src/storage	2.130s
 ok  	github.com/evertonmj/codex/examples/01_basic_usage	2.179s
 ok  	github.com/evertonmj/codex/examples/02_complex_data	2.342s
 ok  	github.com/evertonmj/codex/examples/03_encryption	2.479s
@@ -166,7 +166,7 @@ All integration tests passed, including:
 
 ```go
 // ✅ Public API - NO CHANGES NEEDED
-import "github.com/evertonmj/codex/codex"
+import "github.com/evertonmj/codex/codex/app"
 
 store, err := codex.New("data.db")
 ```
@@ -175,10 +175,10 @@ store, err := codex.New("data.db")
 
 ```go
 // ❌ Old (should not have been used)
-import "github.com/evertonmj/codex/codex/internal/storage"
+import "github.com/evertonmj/codex/codex/app/internal/storage"
 
 // ✅ New (still internal, avoid if possible)
-import "github.com/evertonmj/codex/codex/src/storage"
+import "github.com/evertonmj/codex/codex/app/src/storage"
 ```
 
 ### For Contributors (Internal Development)

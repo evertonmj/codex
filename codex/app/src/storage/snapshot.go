@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/evertonmj/codex/codex/src/atomic"
-	"github.com/evertonmj/codex/codex/src/compression"
-	"github.com/evertonmj/codex/codex/src/encryption"
-	"github.com/evertonmj/codex/codex/src/filelock"
-	"github.com/evertonmj/codex/codex/src/integrity"
+	"github.com/evertonmj/codex/codex/app/src/atomic"
+	"github.com/evertonmj/codex/codex/app/src/compression"
+	"github.com/evertonmj/codex/codex/app/src/encryption"
+	"github.com/evertonmj/codex/codex/app/src/filelock"
+	"github.com/evertonmj/codex/codex/app/src/integrity"
 )
 
 // Snapshot implements the Storer interface for snapshot-based persistence.

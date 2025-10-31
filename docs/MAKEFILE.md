@@ -226,7 +226,7 @@ Starts local documentation server.
 
 ```bash
 make docs-server
-# Open http://localhost:6060/pkg/github.com/evertonmj/codex/codex/
+# Open http://localhost:6060/pkg/github.com/evertonmj/codex/codex/app/
 ```
 
 ## Development Targets

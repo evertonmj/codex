@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/evertonmj/codex/codex"
+	"github.com/evertonmj/codex/codex/app"
 )
 
 type User struct {

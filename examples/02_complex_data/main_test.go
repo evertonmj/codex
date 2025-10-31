@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evertonmj/codex/codex"
+	"github.com/evertonmj/codex/codex/app"
 )
 
 func TestComplexDataExample(t *testing.T) {

@@ -75,7 +75,7 @@ Choose your preferred installation method:
 
 **Option A: Add to existing Go project**
 ```bash
-go get github.com/evertonmj/codex/codex
+go get github.com/evertonmj/codex/codex/app
 ```
 
 **Option B: Clone and explore**
@@ -95,7 +95,7 @@ package main
 import (
     "fmt"
     "log"
-    "github.com/evertonmj/codex/codex"
+    "github.com/evertonmj/codex/codex/app"
 )
 
 func main() {
@@ -217,13 +217,13 @@ Add CodexDB to your Go project:
 
 ```bash
 cd your-project
-go get github.com/evertonmj/codex/codex
+go get github.com/evertonmj/codex/codex/app
 ```
 
 Then import in your code:
 
 ```go
-import "github.com/evertonmj/codex/codex"
+import "github.com/evertonmj/codex/codex/app"
 ```
 
 ### Method 2: Clone Repository
@@ -265,14 +265,14 @@ replace github.com/evertonmj/codex => ./vendor/codex
 
 ```bash
 # Check if module is accessible
-go list -m github.com/evertonmj/codex/codex
+go list -m github.com/evertonmj/codex/codex/app
 
 # Run a simple test
 cat > test.go << 'EOF'
 package main
 import (
     "fmt"
-    "github.com/evertonmj/codex/codex"
+    "github.com/evertonmj/codex/codex/app"
 )
 func main() {
     store, _ := codex.New("test.db")
@@ -345,7 +345,7 @@ store.Clear()
 ```go
 import (
     "errors"
-    "github.com/evertonmj/codex/codex"
+    "github.com/evertonmj/codex/codex/app"
 )
 
 // Check if a key exists using ErrNotFound
@@ -617,7 +617,7 @@ wg.Wait()
 ### 5. Error Handling with Custom Error Types
 
 ```go
-import "github.com/evertonmj/codex/codex/src/errors"
+import "github.com/evertonmj/codex/codex/app/src/errors"
 
 // Comprehensive error handling
 var value string
@@ -638,7 +638,7 @@ if err != nil {
 Built-in structured logging:
 
 ```go
-import "github.com/evertonmj/codex/codex/src/logger"
+import "github.com/evertonmj/codex/codex/app/src/logger"
 
 // Create a logger
 log, err := logger.New("codex.log", logger.LevelInfo)

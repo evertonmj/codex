@@ -57,7 +57,7 @@ package main
 import (
     "fmt"
     "log"
-    "github.com/evertonmj/codex/codex"
+    "github.com/evertonmj/codex/codex/app"
 )
 
 func main() {

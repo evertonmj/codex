@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evertonmj/codex/codex"
+	"github.com/evertonmj/codex/codex/app"
 )
 
 func TestIntegration_SnapshotMode(t *testing.T) {

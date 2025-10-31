@@ -1,7 +1,7 @@
 //go:build performance
 // +build performance
 
-package codex
+package app
 
 import (
 	"fmt"

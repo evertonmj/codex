@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/evertonmj/codex/codex"
+	"github.com/evertonmj/codex/codex/app"
 )
 
 func TestEncryptionExample(t *testing.T) {

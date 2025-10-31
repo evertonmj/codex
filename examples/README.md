@@ -102,7 +102,7 @@ package main
 
 import (
     "log"
-    "github.com/evertonmj/codex/codex"
+    "github.com/evertonmj/codex/codex/app"
 )
 
 func main() {
@@ -134,7 +134,7 @@ func main() {
 ### Advanced Configuration
 
 ```go
-import "github.com/evertonmj/codex/codex"
+import "github.com/evertonmj/codex/codex/app"
 
 // With encryption
 key := make([]byte, 32) // 256-bit key

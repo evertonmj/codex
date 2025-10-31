@@ -10,9 +10,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/evertonmj/codex/codex/src/compression"
-	"github.com/evertonmj/codex/codex/src/encryption"
-	"github.com/evertonmj/codex/codex/src/filelock"
+	"github.com/evertonmj/codex/codex/app/src/compression"
+	"github.com/evertonmj/codex/codex/app/src/encryption"
+	"github.com/evertonmj/codex/codex/app/src/filelock"
 )
 
 // Ledger implements the Storer interface for append-only ledger persistence.

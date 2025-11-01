@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/evertonmj/codex/codex/app"
+	"github.com/evertonmj/codex/app"
 )
 
 func main() {

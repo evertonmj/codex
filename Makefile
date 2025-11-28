@@ -72,7 +72,7 @@ test-verbose: ## Run all tests with verbose output
 
 test-unit: ## Run unit tests only (exclude integration tests)
 	@echo "$(COLOR_BOLD)Running unit tests...$(COLOR_RESET)"
-	$(GO) test ./codex -run '^Test[^I]' -v
+	$(GO) test ./app -run '^Test[^I]' -v
 
 test-integration: ## Run integration tests only
 	@echo "$(COLOR_BOLD)Running integration tests...$(COLOR_RESET)"
@@ -94,7 +94,7 @@ test-examples: ## Run example tests to verify examples work
 test-coverage: ## Run tests with coverage report
 	@echo "$(COLOR_BOLD)Running tests with coverage...$(COLOR_RESET)"
 	@mkdir -p $(COVERAGE_DIR)
-	$(GO) test ./codex/... ./tests -coverprofile=$(COVERAGE_FILE)
+	$(GO) test ./app/... ./tests -coverprofile=$(COVERAGE_FILE)
 	@echo ""
 	@echo "$(COLOR_BOLD)Coverage Summary:$(COLOR_RESET)"
 	@$(GO) tool cover -func=$(COVERAGE_FILE) | grep total
@@ -115,33 +115,33 @@ test-race: ## Run tests with race detector
 # Benchmark targets
 benchmark: ## Run all benchmarks
 	@echo "$(COLOR_BOLD)Running benchmarks...$(COLOR_RESET)"
-	$(GO) test -bench=. -benchmem ./codex
+	$(GO) test -bench=. -benchmem ./app
 	@echo "$(COLOR_GREEN)✓ Benchmarks complete$(COLOR_RESET)"
 
 benchmark-verbose: ## Run benchmarks with verbose output
 	@echo "$(COLOR_BOLD)Running benchmarks (verbose)...$(COLOR_RESET)"
-	$(GO) test -bench=. -benchmem -benchtime=5s ./codex
+	$(GO) test -bench=. -benchmem -benchtime=5s ./app
 
 benchmark-save: ## Run benchmarks and save results
 	@echo "$(COLOR_BOLD)Running benchmarks and saving results...$(COLOR_RESET)"
 	@mkdir -p $(COVERAGE_DIR)
-	$(GO) test -bench=. -benchmem ./codex > $(COVERAGE_DIR)/benchmark-$$(date +%Y%m%d-%H%M%S).txt
+	$(GO) test -bench=. -benchmem ./app > $(COVERAGE_DIR)/benchmark-$$(date +%Y%m%d-%H%M%S).txt
 	@echo "$(COLOR_GREEN)✓ Benchmark results saved$(COLOR_RESET)"
 
 performance: ## Run performance tests (requires build tag)
 	@echo "$(COLOR_BOLD)Running performance tests...$(COLOR_RESET)"
-	$(GO) test -tags=performance -v ./codex -run Performance
+	$(GO) test -tags=performance -v ./app -run Performance
 	@echo "$(COLOR_GREEN)✓ Performance tests complete$(COLOR_RESET)"
 
 performance-high-volume: ## Run high-volume performance tests with all features
 	@echo "$(COLOR_BOLD)Running high-volume performance tests...$(COLOR_RESET)"
 	@echo "$(COLOR_YELLOW)This may take several minutes...$(COLOR_RESET)"
-	$(GO) test -tags=performance -v ./codex -run TestPerformance_HighVolumeWithAllFeatures -timeout 30m
+	$(GO) test -tags=performance -v ./app -run TestPerformance_HighVolumeWithAllFeatures -timeout 30m
 	@echo "$(COLOR_GREEN)✓ High-volume performance tests complete$(COLOR_RESET)"
 
 performance-scaling: ## Run concurrency scaling performance tests
 	@echo "$(COLOR_BOLD)Running concurrency scaling tests...$(COLOR_RESET)"
-	$(GO) test -tags=performance -v ./codex -run TestPerformance_ConcurrencyScaling -timeout 15m
+	$(GO) test -tags=performance -v ./app -run TestPerformance_ConcurrencyScaling -timeout 15m
 	@echo "$(COLOR_GREEN)✓ Scaling tests complete$(COLOR_RESET)"
 
 performance-all: ## Run all performance tests
@@ -350,15 +350,15 @@ prune-regen-validate: ## Complete rebuild with comprehensive validation (tests, 
 # Documentation targets
 docs: ## Generate documentation
 	@echo "$(COLOR_BOLD)Generating documentation...$(COLOR_RESET)"
-	@$(GO) doc -all ./codex > docs/API.md 2>/dev/null || echo "Package documentation:"
-	@$(GO) doc ./codex
+	@$(GO) doc -all ./app > docs/API.md 2>/dev/null || echo "Package documentation:"
+	@$(GO) doc ./app
 	@echo ""
-	@echo "$(COLOR_YELLOW)View package docs:$(COLOR_RESET) go doc ./codex"
-	@echo "$(COLOR_YELLOW)View function docs:$(COLOR_RESET) go doc ./codex.New"
+	@echo "$(COLOR_YELLOW)View package docs:$(COLOR_RESET) go doc ./app"
+	@echo "$(COLOR_YELLOW)View function docs:$(COLOR_RESET) go doc ./app.New"
 
 docs-server: ## Start local documentation server
 	@echo "$(COLOR_BOLD)Starting documentation server...$(COLOR_RESET)"
-	@echo "$(COLOR_YELLOW)Open http://localhost:6060/pkg/github.com/evertonmj/codex/codex/$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Open http://localhost:6060/pkg/github.com/evertonmj/codex/app/$(COLOR_RESET)"
 	godoc -http=:6060
 
 # Development targets

@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/evertonmj/codex/codex/app"
+	"github.com/evertonmj/codex/app"
 )
 
 func TestLedgerModeExample(t *testing.T) {

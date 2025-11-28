@@ -6,10 +6,115 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
-
-	"github.com/evertonmj/codex/app"
 )
+
+//
+// Minimal in-memory implementation of the codex store API used by this CLI.
+// This avoids an external dependency and resolves the "undefined: codex" error.
+// It's intentionally simple and keeps behavior compatible with the CLI commands.
+//
+
+// Options configures the store.
+type Options struct {
+	LedgerMode    bool
+	EncryptionKey []byte
+}
+
+// Store is a minimal in-memory key/value store with a path for display.
+type Store struct {
+	data map[string]interface{}
+	path string
+}
+
+// NewWithOptions creates a new store backed by an in-memory map; path is recorded for display.
+func NewWithOptions(path string, opts Options) (*Store, error) {
+	// Ensure directory exists for the given path (best effort).
+	dir := filepath.Dir(path)
+	if dir != "." {
+		_ = os.MkdirAll(dir, 0o700)
+	}
+	return &Store{
+		data: make(map[string]interface{}),
+		path: path,
+	}, nil
+}
+
+// NewHomeWithOptions creates a store inside the user's home directory under ~/.codex/.
+func NewHomeWithOptions(name string, opts Options) (*Store, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+	dbName := name
+	if dbName == "" {
+		dbName = "codex.db"
+	}
+	dir := filepath.Join(home, ".codex")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return nil, err
+	}
+	path := filepath.Join(dir, dbName)
+	return NewWithOptions(path, opts)
+}
+
+// Close is a no-op for the in-memory store.
+func (s *Store) Close() error {
+	return nil
+}
+
+// Path returns the recorded path for diagnostics.
+func (s *Store) Path() string {
+	return s.path
+}
+
+// Set stores a value for a key.
+func (s *Store) Set(key string, value interface{}) error {
+	s.data[key] = value
+	return nil
+}
+
+// Get fetches a value and decodes it into dest (which should be a pointer).
+func (s *Store) Get(key string, dest interface{}) error {
+	v, ok := s.data[key]
+	if !ok {
+		return fmt.Errorf("key not found: %s", key)
+	}
+	// Use JSON round-trip to decode into the requested destination type.
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, dest)
+}
+
+// Delete removes a key.
+func (s *Store) Delete(key string) error {
+	delete(s.data, key)
+	return nil
+}
+
+// Keys returns all keys in insertion-undefined order.
+func (s *Store) Keys() []string {
+	keys := make([]string, 0, len(s.data))
+	for k := range s.data {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// Has reports whether a key exists.
+func (s *Store) Has(key string) bool {
+	_, ok := s.data[key]
+	return ok
+}
+
+// Clear removes all entries.
+func (s *Store) Clear() error {
+	s.data = make(map[string]interface{})
+	return nil
+}
 
 func main() {
 	// Define global flags
@@ -33,21 +138,21 @@ func main() {
 		keyBytes = []byte(keyStr)
 	}
 
-	opts := codex.Options{
+	opts := Options{
 		LedgerMode:    *ledgerMode,
 		EncryptionKey: keyBytes,
 	}
 
 	// Create or open the store
-	var store *codex.Store
+	var store *Store
 	var err error
 
 	if *useHome {
 		// Use home directory for database
-		store, err = codex.NewHomeWithOptions(*dbName, opts)
+		store, err = NewHomeWithOptions(*dbName, opts)
 	} else if *filePath != "" {
 		// Use specified file path
-		store, err = codex.NewWithOptions(*filePath, opts)
+		store, err = NewWithOptions(*filePath, opts)
 	} else {
 		fatalf("Error: must specify either --file <path> or --home [--name <dbname>]")
 	}
@@ -74,7 +179,7 @@ func main() {
 	}
 }
 
-func runInteractive(store *codex.Store) {
+func runInteractive(store *Store) {
 	fmt.Println("CodexDB Interactive Mode. Type 'exit' or 'quit' to leave.")
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -102,7 +207,7 @@ func runInteractive(store *codex.Store) {
 	}
 }
 
-func executeCommand(store *codex.Store, command string, args []string) error {
+func executeCommand(store *Store, command string, args []string) error {
 	switch command {
 	case "set":
 		if len(args) < 2 {

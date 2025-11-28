@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/evertonmj/codex/codex/app"
+	"github.com/evertonmj/codex/app"
 )
 
 func TestBasicUsageExample(t *testing.T) {

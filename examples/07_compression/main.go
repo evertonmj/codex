@@ -7,25 +7,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/evertonmj/codex/codex/app"
+	codex "github.com/evertonmj/codex/app"
 )
 
 func main() {
-	fmt.Println("=== CodexDB Compression Example ===")
+	// Prepare test data
+	testData := strings.Repeat("This is some repetitive test data. ", 100)
 
-	// Clean up any existing test files
-	os.Remove("compression_none.db")
-	os.Remove("compression_gzip.db")
-	os.Remove("compression_zstd.db")
-	os.Remove("compression_snappy.db")
-	os.Remove("compression_encrypted.db")
-
-	// Create test data - repetitive data compresses well
-	testData := strings.Repeat("This is repetitive test data for compression demonstration. ", 100)
-	fmt.Printf("Test data size: %d bytes\n\n", len(testData))
-
-	// Example 1: No Compression (baseline)
-	fmt.Println("1. No Compression (Baseline)")
+	fmt.Println("1. No Compression - Baseline")
 	store1, err := codex.NewWithOptions("compression_none.db", codex.Options{
 		Compression: codex.NoCompression,
 	})
@@ -36,7 +25,6 @@ func main() {
 	store1.Close()
 	printFileSize("compression_none.db")
 
-	// Example 2: Gzip Compression (balanced)
 	fmt.Println("\n2. Gzip Compression (Balanced speed and compression)")
 	store2, err := codex.NewWithOptions("compression_gzip.db", codex.Options{
 		Compression:      codex.GzipCompression,
@@ -49,7 +37,6 @@ func main() {
 	store2.Close()
 	printFileSize("compression_gzip.db")
 
-	// Example 3: Zstd Compression (best compression ratio)
 	fmt.Println("\n3. Zstd Compression (Best compression ratio)")
 	store3, err := codex.NewWithOptions("compression_zstd.db", codex.Options{
 		Compression:      codex.ZstdCompression,
@@ -62,7 +49,6 @@ func main() {
 	store3.Close()
 	printFileSize("compression_zstd.db")
 
-	// Example 4: Snappy Compression (fastest)
 	fmt.Println("\n4. Snappy Compression (Fastest, lower compression)")
 	store4, err := codex.NewWithOptions("compression_snappy.db", codex.Options{
 		Compression: codex.SnappyCompression,
@@ -74,13 +60,11 @@ func main() {
 	store4.Close()
 	printFileSize("compression_snappy.db")
 
-	// Example 5: Compression + Encryption
 	fmt.Println("\n5. Compression + Encryption")
 	key := make([]byte, 32)
 	if _, err := rand.Read(key); err != nil {
 		log.Fatal(err)
 	}
-
 	store5, err := codex.NewWithOptions("compression_encrypted.db", codex.Options{
 		EncryptionKey:    key,
 		Compression:      codex.GzipCompression,
@@ -93,7 +77,6 @@ func main() {
 	store5.Close()
 	printFileSize("compression_encrypted.db")
 
-	// Example 6: Reading compressed data
 	fmt.Println("\n6. Reading Compressed Data")
 	store6, err := codex.NewWithOptions("compression_gzip.db", codex.Options{
 		Compression:      codex.GzipCompression,
@@ -102,17 +85,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	var retrieved string
 	if err := store6.Get("data", &retrieved); err != nil {
 		log.Fatal(err)
 	}
 	store6.Close()
-
 	fmt.Printf("Retrieved data size: %d bytes\n", len(retrieved))
 	fmt.Printf("Data matches original: %v\n", retrieved == testData)
 
-	// Example 7: Multiple keys with compression
 	fmt.Println("\n7. Multiple Keys with Compression")
 	store7, err := codex.NewWithOptions("compression_multi.db", codex.Options{
 		Compression:      codex.ZstdCompression,
@@ -121,7 +101,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	for i := 0; i < 100; i++ {
 		key := fmt.Sprintf("key_%d", i)
 		value := strings.Repeat(fmt.Sprintf("Value %d ", i), 50)
@@ -130,7 +109,6 @@ func main() {
 	store7.Close()
 	printFileSize("compression_multi.db")
 
-	// Example 8: Batch operations with compression
 	fmt.Println("\n8. Batch Operations with Compression")
 	store8, err := codex.NewWithOptions("compression_batch.db", codex.Options{
 		Compression: codex.SnappyCompression,
@@ -138,14 +116,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	batch := store8.NewBatch()
 	for i := 0; i < 1000; i++ {
 		key := fmt.Sprintf("batch_key_%d", i)
 		value := fmt.Sprintf("Batch value %d", i)
 		batch.Set(key, value)
 	}
-
 	if err := batch.Execute(); err != nil {
 		log.Fatal(err)
 	}

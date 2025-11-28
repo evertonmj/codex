@@ -33,3 +33,12 @@ codex-cli
 # System files
 .DS_Store
 *.DS_Store*
+_archive/codex_app_old/test_batch_persist.db.lock
+_archive/codex_app_old/test_batch.db.lock
+app/test_batch_persist.db.lock
+app/test_batch.db.lock
+docs/REFACTORING_INTERNAL_TO_SRC.md
+docs/SECURITY_AUDIT_FIXES.md
+docs/REFACTORING_INTERNAL_TO_SRC.md
+docs/REFACTORING_INTERNAL_TO_SRC.md
+docs/SECURITY_AUDIT_FIXES.md

@@ -59,7 +59,7 @@ CodexDB uses **AES in GCM mode** (Galois/Counter Mode) for authenticated encrypt
 import (
     "crypto/rand"
     "log"
-    "github.com/evertonmj/codex/codex/app"
+    "github.com/evertonmj/codex/app"
 )
 
 func main() {

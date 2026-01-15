@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -62,11 +63,34 @@ func ensureDBDirectory(dbPath string) error {
 	return os.MkdirAll(dir, 0755)
 }
 
+// getAvailablePort returns the first available port from the list of preferred ports
+// Tries ports in order: 111, 1111, 11111
+func getAvailablePort() string {
+	preferredPorts := []string{"111", "1111", "11111"}
+
+	for _, port := range preferredPorts {
+		listener, err := net.Listen("tcp", net.JoinHostPort("", port))
+		if err == nil {
+			listener.Close()
+			return port
+		}
+	}
+
+	// Fallback to 8080 if none of the preferred ports are available
+	return "8080"
+}
+
 // LoadConfig loads configuration from environment variables
 func LoadConfig() *Config {
+	// Determine the port - use explicit env var if set, otherwise auto-detect
+	port := os.Getenv("CODEX_PORT")
+	if port == "" {
+		port = getAvailablePort()
+	}
+
 	config := &Config{
 		// Server defaults
-		Port:            getEnv("CODEX_PORT", "8080"),
+		Port:            port,
 		Host:            getEnv("CODEX_HOST", "0.0.0.0"),
 		ShutdownTimeout: getDurationEnv("CODEX_SHUTDOWN_TIMEOUT", 30*time.Second),
 

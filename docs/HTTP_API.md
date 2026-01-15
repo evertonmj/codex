@@ -13,7 +13,18 @@ CodexDB HTTP Service exposes all key-value database operations through a RESTful
 ## Base URL
 
 ```
-http://localhost:8080/api/v1/
+http://localhost:<port>/api/v1/
+```
+
+**Default Port:** The service auto-detects the best available port in this order:
+1. **Port 111** (preferred)
+2. **Port 1111** (if 111 is unavailable)
+3. **Port 11111** (if 1111 is unavailable)
+4. **Port 8080** (fallback)
+
+You can override with the `CODEX_PORT` environment variable:
+```bash
+CODEX_PORT=9000 ./bin/codex-service
 ```
 
 ## Authentication
@@ -29,9 +40,11 @@ X-API-Key: your-api-key-here
 ### Example
 
 ```bash
-curl -X GET http://localhost:8080/api/v1/keys \
+curl -X GET http://localhost:111/api/v1/keys \
   -H "X-API-Key: your-api-key-here"
 ```
+
+**Note:** Replace `111` with your actual port (see Base URL section above)
 
 ## Core Operations
 
@@ -70,7 +83,7 @@ curl -X GET http://localhost:8080/api/v1/keys \
 
 Store a string:
 ```bash
-curl -X PUT http://localhost:8080/api/v1/keys/greeting \
+curl -X PUT http://localhost:111/api/v1/keys/greeting \
   -H "X-API-Key: test-key" \
   -H "Content-Type: application/json" \
   -d '{"value": "hello world"}'
@@ -78,7 +91,7 @@ curl -X PUT http://localhost:8080/api/v1/keys/greeting \
 
 Store a JSON object:
 ```bash
-curl -X PUT http://localhost:8080/api/v1/keys/user:1 \
+curl -X PUT http://localhost:111/api/v1/keys/user:1 \
   -H "X-API-Key: test-key" \
   -H "Content-Type: application/json" \
   -d '{"value": {"name": "Alice", "age": 30}}'
@@ -86,7 +99,7 @@ curl -X PUT http://localhost:8080/api/v1/keys/user:1 \
 
 Store a number:
 ```bash
-curl -X PUT http://localhost:8080/api/v1/keys/counter \
+curl -X PUT http://localhost:111/api/v1/keys/counter \
   -H "X-API-Key: test-key" \
   -H "Content-Type: application/json" \
   -d '{"value": 42}'

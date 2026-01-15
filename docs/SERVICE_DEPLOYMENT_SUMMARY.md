@@ -122,9 +122,17 @@ CODEX_API_KEYS=test-key ./bin/codex-service
 # Using Make
 make run-service
 
-# Test the service
-curl http://localhost:8080/health
+# Test the service (service will log the actual port used)
+curl http://localhost:111/health  # Default port, or check logs for actual port
 ```
+
+**Port Auto-Detection:** The service automatically uses the first available port:
+- Tries port **111** first
+- Falls back to **1111** if 111 is unavailable
+- Falls back to **11111** if 1111 is unavailable
+- Falls back to **8080** as last resort
+
+To override: `CODEX_PORT=9000 ./bin/codex-service`
 
 ### Build Docker Image
 

@@ -4,6 +4,16 @@
 
 This guide covers deploying CodexDB HTTP Service to a Kubernetes cluster. We provide both raw YAML manifests and a production-ready Helm chart.
 
+### Port Auto-Detection
+
+The CodexDB HTTP Service automatically detects and uses the first available port from this list:
+- **Port 111** (preferred)
+- **Port 1111** (if 111 is unavailable)
+- **Port 11111** (if 1111 is unavailable)
+- **Port 8080** (fallback)
+
+You can override the port detection by setting the `CODEX_PORT` environment variable in the ConfigMap or deployment manifest.
+
 ## Prerequisites
 
 ### Required Tools

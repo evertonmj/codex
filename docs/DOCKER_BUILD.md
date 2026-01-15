@@ -113,14 +113,27 @@ docker rm codex
 
 ## Testing the Container
 
+### Port Auto-Detection Note
+
+The service automatically detects the best available port:
+- Tries port **111** first (inside container at port 111)
+- Falls back to **1111** if 111 is unavailable
+- Falls back to **11111** if 1111 is unavailable
+- Falls back to **8080** as last resort
+
+When running `docker run -p 8080:111`, the container's port is mapped to your localhost:8080.
+
 ### Health Check
 
 ```bash
-# Check if service is running
+# Check if service is running (adjust port if different)
 curl http://localhost:8080/health
 
 # Expected response:
 # {"status":"healthy"}
+
+# To find actual container port, check logs
+docker logs codex | grep "Server running"
 ```
 
 ### Test API Operations

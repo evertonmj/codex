@@ -7,7 +7,7 @@ metadata:
     component: config
 data:
   # Server configuration
-  # CODEX_PORT will be auto-detected (tries 111, 1111, 11111; falls back to 8080)
+  # CODEX_PORT will be auto-detected (tries 11111, 922, 1987; falls back to 8080)
   # To override, set CODEX_PORT explicitly
   CODEX_HOST: "0.0.0.0"
   CODEX_SHUTDOWN_TIMEOUT: "30s"

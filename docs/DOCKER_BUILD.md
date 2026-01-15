@@ -116,12 +116,12 @@ docker rm codex
 ### Port Auto-Detection Note
 
 The service automatically detects the best available port:
-- Tries port **111** first (inside container at port 111)
-- Falls back to **1111** if 111 is unavailable
-- Falls back to **11111** if 1111 is unavailable
+- Tries port **11111** first (inside container at port 11111)
+- Falls back to **922** if 11111 is unavailable
+- Falls back to **1987** if 922 is unavailable
 - Falls back to **8080** as last resort
 
-When running `docker run -p 8080:111`, the container's port is mapped to your localhost:8080.
+When running `docker run -p 8080:11111`, the container's port is mapped to your localhost:8080.
 
 ### Health Check
 

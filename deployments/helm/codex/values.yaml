@@ -89,7 +89,7 @@ healthCheck:
 
 # Server configuration
 server:
-  # port: auto-detected (tries 111, 1111, 11111; falls back to 8080)
+  # port: auto-detected (tries 11111, 1111, 111; falls back to 8080)
   # To override, set CODEX_PORT environment variable explicitly
   host: "0.0.0.0"
   shutdownTimeout: "30s"

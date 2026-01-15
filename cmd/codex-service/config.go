@@ -64,9 +64,9 @@ func ensureDBDirectory(dbPath string) error {
 }
 
 // getAvailablePort returns the first available port from the list of preferred ports
-// Tries ports in order: 111, 1111, 11111
+// Tries ports in order: 11111, 922, 1987
 func getAvailablePort() string {
-	preferredPorts := []string{"111", "1111", "11111"}
+	preferredPorts := []string{"11111", "922", "1987"}
 
 	for _, port := range preferredPorts {
 		listener, err := net.Listen("tcp", net.JoinHostPort("", port))

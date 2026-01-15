@@ -123,13 +123,13 @@ CODEX_API_KEYS=test-key ./bin/codex-service
 make run-service
 
 # Test the service (service will log the actual port used)
-curl http://localhost:111/health  # Default port, or check logs for actual port
+curl http://localhost:11111/health  # Default port, or check logs for actual port
 ```
 
 **Port Auto-Detection:** The service automatically uses the first available port:
-- Tries port **111** first
-- Falls back to **1111** if 111 is unavailable
-- Falls back to **11111** if 1111 is unavailable
+- Tries port **11111** first
+- Falls back to **922** if 11111 is unavailable
+- Falls back to **1987** if 922 is unavailable
 - Falls back to **8080** as last resort
 
 To override: `CODEX_PORT=9000 ./bin/codex-service`

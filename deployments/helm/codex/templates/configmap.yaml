@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "codex.labels" . | nindent 4 }}
 data:
-  # CODEX_PORT will be auto-detected (tries 111, 1111, 11111; falls back to 8080)
+  # CODEX_PORT will be auto-detected (tries 11111, 922, 1987; falls back to 8080)
   # To override, set CODEX_PORT explicitly or add it below
   CODEX_HOST: "{{ .Values.server.host }}"
   CODEX_SHUTDOWN_TIMEOUT: "{{ .Values.server.shutdownTimeout }}"

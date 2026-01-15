@@ -1,0 +1,189 @@
+# CodexDB Helm Chart Values
+# Default values for codex deployment
+
+# Image configuration
+image:
+  repository: codex-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Service replica count
+replicaCount: 1
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+  annotations: {}
+    # For example, service mesh annotations:
+    # sidecar.istio.io/inject: "false"
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: codex.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+    # - secretName: codex-tls
+    #   hosts:
+    #     - codex.example.com
+
+# Storage configuration
+persistence:
+  enabled: true
+  storageClass: "fast-ssd"  # Use 'standard' for slower storage or 'fast-ssd' for faster
+  size: 10Gi
+  accessMode: ReadWriteOnce
+  annotations: {}
+
+# Database configuration
+database:
+  path: /data/codex.db
+  ledgerMode: false
+  numBackups: 5
+  compression: gzip        # none, gzip, zstd, snappy
+  compressionLevel: 6
+
+# Security configuration
+security:
+  # API keys (comma-separated)
+  # !!! IMPORTANT: Override with actual keys in production !!!
+  apiKeys: []
+
+  # AES encryption key (32 bytes hex-encoded for AES-256)
+  # Leave empty to disable encryption
+  # !!! IMPORTANT: Override with actual key in production !!!
+  encryptionKey: ""
+
+# Resource configuration
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Health checks
+healthCheck:
+  liveness:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 2
+
+# Server configuration
+server:
+  port: 8080
+  host: "0.0.0.0"
+  shutdownTimeout: "30s"
+  kubernetesMode: true  # Set to true when running in Kubernetes
+
+# Logging configuration
+logging:
+  level: info  # debug, info, warn, error
+
+# Node affinity and pod anti-affinity
+affinity: {}
+  # podAntiAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #   - weight: 100
+  #     podAffinityTerm:
+  #       labelSelector:
+  #         matchExpressions:
+  #         - key: app
+  #           operator: In
+  #           values:
+  #           - codex
+  #       topologyKey: kubernetes.io/hostname
+
+# Node selection
+nodeSelector: {}
+  # kubernetes.io/os: linux
+  # node-type: database
+
+# Tolerations for node taints
+tolerations: []
+  # - key: "dedicated"
+  #   operator: "Equal"
+  #   value: "database"
+  #   effect: "NoSchedule"
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 0
+
+# Service Account
+serviceAccount:
+  create: true
+  name: codex
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# Pod annotations
+podAnnotations: {}
+  # prometheus.io/scrape: "true"
+  # prometheus.io/port: "8080"
+  # prometheus.io/path: "/metrics"
+
+# Pod labels
+podLabels: {}
+
+# Extra environment variables
+extraEnv: []
+  # - name: CUSTOM_VAR
+  #   value: "custom-value"
+
+# Extra volumes
+extraVolumes: []
+
+# Extra volume mounts
+extraVolumeMounts: []
+
+# Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Monitoring and metrics
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    path: /metrics
+
+# Backup configuration
+backup:
+  enabled: false
+  schedule: "0 2 * * *"  # Daily at 2 AM UTC
+  retention: 7  # days
+  storageClass: "default"
+  size: 20Gi

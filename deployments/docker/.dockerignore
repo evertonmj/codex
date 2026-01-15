@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+.github
+
+# Build artifacts
+bin/
+dist/
+*.o
+*.a
+*.so
+
+# Database files
+*.db
+*.db.bak.*
+
+# Test artifacts
+coverage/
+*.out
+*.log
+
+# Documentation
+docs/
+README.md
+CHANGELOG.md
+LICENSE
+
+# Examples
+examples/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Development
+vendor/
+.env
+.env.local
+
+# CI/CD
+.github/
+.gitignore
+.cloudformation
+Makefile
+
+# Node modules (if any frontend)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Plan files
+.claude/

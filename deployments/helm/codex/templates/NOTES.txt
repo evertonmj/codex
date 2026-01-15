@@ -1,0 +1,51 @@
+1. Get the status of the CodexDB service:
+  kubectl get statefulsets {{ include "codex.fullname" . }}
+  kubectl get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+  kubectl get pvc -l app.kubernetes.io/instance={{ .Release.Name }}
+
+2. Check the service:
+  kubectl get svc {{ include "codex.fullname" . }}-service
+  kubectl describe svc {{ include "codex.fullname" . }}-service
+
+3. View the logs:
+  kubectl logs {{ include "codex.fullname" . }}-0
+  kubectl logs -f {{ include "codex.fullname" . }}-0  # Follow logs
+
+4. Test the service (port-forward):
+  kubectl port-forward svc/{{ include "codex.fullname" . }}-service 8080:{{ .Values.service.port }}
+
+5. Make a test request:
+  # Health check
+  curl http://localhost:8080/health
+
+  # Set a key (requires X-API-Key header if configured)
+  curl -X PUT http://localhost:8080/api/v1/keys/test \
+    -H "Content-Type: application/json" \
+    -H "X-API-Key: your-api-key" \
+    -d '{"value": "hello world"}'
+
+  # Get a key
+  curl http://localhost:8080/api/v1/keys/test \
+    -H "X-API-Key: your-api-key"
+
+  # List all keys
+  curl http://localhost:8080/api/v1/keys \
+    -H "X-API-Key: your-api-key"
+
+6. Access the database directly (if needed):
+  kubectl exec -it {{ include "codex.fullname" . }}-0 -- /bin/sh
+  ls -la /data/
+
+7. View pod details:
+  kubectl describe pod {{ include "codex.fullname" . }}-0
+
+8. Scale the deployment:
+  kubectl scale statefulset {{ include "codex.fullname" . }} --replicas=3
+
+9. Update the deployment:
+  helm upgrade {{ .Release.Name }} codex/codex --values values.yaml
+
+10. Delete the release:
+  helm uninstall {{ .Release.Name }}
+
+For more information, visit: https://github.com/evertonmj/codex

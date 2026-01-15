@@ -1,0 +1,19 @@
+apiVersion: v2
+name: codex
+description: CodexDB - File-based Key-Value Database HTTP Service for Kubernetes
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - database
+  - key-value
+  - http-service
+  - kubernetes
+home: https://github.com/evertonmj/codex
+sources:
+  - https://github.com/evertonmj/codex
+maintainers:
+  - name: CodexDB Project
+    email: project@codex.example.com
+icon: https://via.placeholder.com/256?text=CodexDB
+dependencies: []

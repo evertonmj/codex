@@ -37,9 +37,16 @@ build: ## Build the CLI binary (creates both codex-cli and cdx)
 	$(GO) build -o $(BUILD_DIR)/$(BINARY_ALIAS) ./cmd/codex-cli
 	@echo "$(COLOR_GREEN)✓ Alias created at $(BUILD_DIR)/$(BINARY_ALIAS)$(COLOR_RESET)"
 
+build-service: ## Build the HTTP service binary
+	@echo "$(COLOR_BOLD)Building codex-service...$(COLOR_RESET)"
+	@mkdir -p $(BUILD_DIR)
+	$(GO) build -o $(BUILD_DIR)/codex-service ./cmd/codex-service
+	@echo "$(COLOR_GREEN)✓ Service binary created at $(BUILD_DIR)/codex-service$(COLOR_RESET)"
+
 build-all: ## Build all binaries and examples
 	@echo "$(COLOR_BOLD)Building all binaries...$(COLOR_RESET)"
 	@$(MAKE) build
+	@$(MAKE) build-service
 	@echo "$(COLOR_BOLD)Building examples...$(COLOR_RESET)"
 	@for dir in $(EXAMPLES_DIR)/*/; do \
 		example=$$(basename $$dir); \
@@ -194,10 +201,32 @@ vet: ## Run go vet
 
 check: fmt vet lint test ## Run all code quality checks
 
+# Docker targets
+docker-build: build-service ## Build Docker image for the service
+	@echo "$(COLOR_BOLD)Building Docker image...$(COLOR_RESET)"
+	docker build -t codex-service:latest -f deployments/docker/Dockerfile .
+	@echo "$(COLOR_GREEN)✓ Docker image built successfully$(COLOR_RESET)"
+	@docker images | grep codex-service
+
+docker-run: docker-build ## Build and run the service in Docker
+	@echo "$(COLOR_BOLD)Running codex-service in Docker...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Service available at http://localhost:8080$(COLOR_RESET)"
+	docker run -p 8080:8080 -e CODEX_API_KEYS=test-key codex-service:latest
+
+docker-push: docker-build ## Build and push Docker image to registry
+	@echo "$(COLOR_BOLD)Pushing Docker image...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Configure DOCKER_REGISTRY environment variable to push to custom registry$(COLOR_RESET)"
+	docker push codex-service:latest
+
 # Run targets
 run-cli: build ## Build and run the CLI in interactive mode
 	@echo "$(COLOR_BOLD)Starting CodexDB CLI...$(COLOR_RESET)"
 	$(BUILD_DIR)/$(BINARY_NAME) --file=demo.db interactive
+
+run-service: build-service ## Build and run the HTTP service locally
+	@echo "$(COLOR_BOLD)Starting CodexDB HTTP Service...$(COLOR_RESET)"
+	@echo "$(COLOR_YELLOW)Service available at http://localhost:8080$(COLOR_RESET)"
+	CODEX_API_KEYS=test-key $(BUILD_DIR)/codex-service
 
 run-example-%: ## Run a specific example (e.g., make run-example-01_basic_usage)
 	@echo "$(COLOR_BOLD)Running example: $*$(COLOR_RESET)"

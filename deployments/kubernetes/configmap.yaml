@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codex-config
+  labels:
+    app: codex
+    component: config
+data:
+  # Server configuration
+  CODEX_PORT: "8080"
+  CODEX_HOST: "0.0.0.0"
+  CODEX_SHUTDOWN_TIMEOUT: "30s"
+
+  # Kubernetes mode - enables /data/codex.db path (inside container)
+  # For local execution, omit this to use ~/.codex_data/codex.db
+  CODEX_KUBERNETES: "true"
+
+  # Database configuration
+  # In Kubernetes: uses /data/codex.db (inside container, mounted to PVC)
+  # Locally: uses ~/.codex_data/codex.db (home directory)
+  # You can override with CODEX_DB_PATH environment variable
+  CODEX_LEDGER_MODE: "false"
+  CODEX_NUM_BACKUPS: "5"
+
+  # Compression configuration
+  # Options: none, gzip, zstd, snappy
+  CODEX_COMPRESSION: "gzip"
+  CODEX_COMPRESSION_LEVEL: "6"
+
+  # Monitoring
+  CODEX_LOG_LEVEL: "info"

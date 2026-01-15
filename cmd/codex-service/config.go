@@ -18,6 +18,9 @@ type Config struct {
 	Host            string
 	ShutdownTimeout time.Duration
 
+	// RESP Protocol
+	RESPPort string
+
 	// Database
 	DBPath           string
 	LedgerMode       bool
@@ -93,6 +96,7 @@ func LoadConfig() *Config {
 		Port:            port,
 		Host:            getEnv("CODEX_HOST", "0.0.0.0"),
 		ShutdownTimeout: getDurationEnv("CODEX_SHUTDOWN_TIMEOUT", 30*time.Second),
+		RESPPort:        getEnv("CODEX_RESP_PORT", "212"),
 
 		// Database defaults
 		DBPath:           getEnv("CODEX_DB_PATH", getDefaultDBPath()),

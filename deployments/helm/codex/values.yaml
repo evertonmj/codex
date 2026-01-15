@@ -95,6 +95,10 @@ server:
   shutdownTimeout: "30s"
   kubernetesMode: true  # Set to true when running in Kubernetes
 
+  # RESP protocol configuration
+  respPort: 212  # Custom port for RESP protocol
+  respEnabled: true  # Enable RESP protocol server
+
 # Logging configuration
 logging:
   level: info  # debug, info, warn, error

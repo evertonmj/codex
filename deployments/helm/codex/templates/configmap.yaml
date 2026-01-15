@@ -10,6 +10,7 @@ data:
   CODEX_HOST: "{{ .Values.server.host }}"
   CODEX_SHUTDOWN_TIMEOUT: "{{ .Values.server.shutdownTimeout }}"
   CODEX_KUBERNETES: "{{ .Values.server.kubernetesMode }}"
+  CODEX_RESP_PORT: "{{ .Values.server.respPort }}"
   CODEX_LEDGER_MODE: "{{ .Values.database.ledgerMode }}"
   CODEX_NUM_BACKUPS: "{{ .Values.database.numBackups }}"
   CODEX_COMPRESSION: "{{ .Values.database.compression }}"

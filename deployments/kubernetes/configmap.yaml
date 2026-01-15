@@ -28,5 +28,10 @@ data:
   CODEX_COMPRESSION: "gzip"
   CODEX_COMPRESSION_LEVEL: "6"
 
+  # RESP protocol configuration
+  # RESP server port (default: 212)
+  # To override, set CODEX_RESP_PORT explicitly
+  CODEX_RESP_PORT: "212"
+
   # Monitoring
   CODEX_LOG_LEVEL: "info"

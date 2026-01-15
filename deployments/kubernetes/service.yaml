@@ -15,6 +15,10 @@ spec:
     port: 80
     targetPort: http
     protocol: TCP
+  - name: resp
+    port: 212
+    targetPort: 212
+    protocol: TCP
   publishNotReadyAddresses: false
 
 ---
@@ -35,5 +39,9 @@ spec:
   - name: http
     port: 80
     targetPort: http
+    protocol: TCP
+  - name: resp
+    port: 212
+    targetPort: 212
     protocol: TCP
   sessionAffinity: ClientIP

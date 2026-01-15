@@ -15,6 +15,9 @@ import (
 	"github.com/evertonmj/codex/pkg/api"
 )
 
+// startTime tracks when the service started (for CDX.INFO command)
+var startTime = time.Now()
+
 func main() {
 	// Load configuration from environment
 	config := LoadConfig()
@@ -83,11 +86,17 @@ func main() {
 		Handler: loggingMiddleware(logger, mux),
 	}
 
+	// Create authenticator for RESP server
+	authenticator := NewAuthenticator(config.APIKeys)
+
+	// Create RESP server
+	respServer := NewRESPServer(store, config, authenticator)
+
 	// Channel to listen for interrupt signals
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
-	// Start server in a goroutine
+	// Start HTTP server in a goroutine
 	go func() {
 		logger.Printf("HTTP server listening on %s", server.Addr)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -95,19 +104,31 @@ func main() {
 		}
 	}()
 
+	// Start RESP server in a goroutine
+	go func() {
+		if err := respServer.Start(); err != nil {
+			logger.Fatalf("RESP server error: %v", err)
+		}
+	}()
+
 	// Wait for interrupt signal
 	<-sigChan
-	logger.Printf("Shutdown signal received, gracefully stopping server...")
+	logger.Printf("Shutdown signal received, gracefully stopping servers...")
 
 	// Create context with timeout for shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), config.ShutdownTimeout)
 	defer cancel()
 
+	// Shutdown both servers
 	if err := server.Shutdown(ctx); err != nil {
-		logger.Fatalf("Server shutdown error: %v", err)
+		logger.Printf("HTTP server shutdown error: %v", err)
 	}
 
-	logger.Printf("Server stopped successfully")
+	if err := respServer.Shutdown(); err != nil {
+		logger.Printf("RESP server shutdown error: %v", err)
+	}
+
+	logger.Printf("Servers stopped successfully")
 }
 
 // Service represents the HTTP service

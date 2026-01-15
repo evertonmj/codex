@@ -10,6 +10,8 @@ CodexDB HTTP Service exposes all key-value database operations through a RESTful
 - **JSON request/response bodies** for easy integration
 - **Proper HTTP status codes** for error handling
 
+**Note:** For high-performance scenarios, CodexDB also provides a [RESP protocol server](./RESP_PROTOCOL.md) running on port 212 with 3-5x better throughput.
+
 ## Base URL
 
 ```

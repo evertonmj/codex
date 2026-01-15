@@ -557,17 +557,77 @@ export CODEX_API_KEY="your-api-key"
 ./codex-http-cli get mykey
 ```
 
-## Comparison: CLI vs HTTP Service
+## RESP Protocol (High-Performance Alternative)
 
-| Feature | codex-cli (Direct) | HTTP Service |
-|---------|-------------------|--------------|
-| **Access Mode** | Direct database file | Remote HTTP API |
-| **Concurrency** | Single process | Multiple clients |
-| **Deployment** | Local file system | Kubernetes/Docker |
-| **Authentication** | File permissions | API key |
-| **Network** | Local only | Network accessible |
-| **Scaling** | Single instance | Multiple replicas |
-| **Backup** | Manual file copy | Volume snapshots |
+For high-throughput scenarios, use the RESP protocol server on port 212 instead of HTTP. RESP provides 3-5x better performance:
+
+**Setup:**
+```bash
+export CODEX_RESP_SERVER="localhost:212"
+export CODEX_API_KEY="your-api-key-here"
+```
+
+**Set a value (RESP):**
+
+```bash
+{
+  echo -ne "*3\r\n\$7\r\nCDX.SET\r\n\$5\r\nmykey\r\n\$11\r\nhello world\r\n"
+  sleep 0.1
+} | nc $CODEX_RESP_SERVER
+
+# Response: +OK
+```
+
+**Get a value (RESP):**
+
+```bash
+{
+  echo -ne "*2\r\n\$7\r\nCDX.GET\r\n\$5\r\nmykey\r\n"
+  sleep 0.1
+} | nc $CODEX_RESP_SERVER
+
+# Response: $11\r\nhello world\r\n
+```
+
+**Using Go client:**
+
+```go
+// See RESP_PROTOCOL.md for complete Go client example
+conn, _ := net.Dial("tcp", "localhost:212")
+cmd := "*3\r\n$7\r\nCDX.SET\r\n$5\r\nmykey\r\n$11\r\nhello world\r\n"
+conn.Write([]byte(cmd))
+```
+
+**Using Python client:**
+
+```python
+import socket
+
+conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+conn.connect(('localhost', 212))
+
+# SET command
+cmd = b"*3\r\n$7\r\nCDX.SET\r\n$5\r\nmykey\r\n$11\r\nhello world\r\n"
+conn.sendall(cmd)
+
+response = conn.recv(1024)
+print(response)  # b'+OK\r\n'
+```
+
+For detailed RESP documentation, see [RESP Protocol Guide](./RESP_PROTOCOL.md).
+
+## Comparison: CLI vs HTTP vs RESP
+
+| Feature | codex-cli (Direct) | HTTP Service | RESP Server |
+| --- | --- | --- | --- |
+| **Access Mode** | Direct database file | Remote HTTP API | Remote RESP Protocol |
+| **Concurrency** | Single process | Multiple clients | Multiple clients |
+| **Deployment** | Local file system | Kubernetes/Docker | Kubernetes/Docker |
+| **Authentication** | File permissions | API key | API key |
+| **Network** | Local only | Network accessible | Network accessible |
+| **Performance** | Baseline (0.1-0.5ms) | Good (1-5ms) | Excellent (0.3-1ms) |
+| **Throughput** | 2000-10000 ops/sec | 200-1000 ops/sec | 1000-3000 ops/sec |
+| **Best For** | Development | Web services | High-throughput services |
 
 ## When to Use Each Approach
 

@@ -8,6 +8,9 @@ import (
 )
 
 func TestGenerateDBPath(t *testing.T) {
+	baseDir := t.TempDir()
+	t.Setenv("CODEXDB_DIR", baseDir)
+
 	t.Run("generates path with default name", func(t *testing.T) {
 		path, err := GenerateDBPath("")
 		if err != nil {
@@ -24,10 +27,9 @@ func TestGenerateDBPath(t *testing.T) {
 			t.Errorf("expected path to end with .db, got %s", path)
 		}
 
-		// Should contain home directory
-		homeDir, _ := os.UserHomeDir()
-		if !strings.Contains(path, homeDir) {
-			t.Errorf("expected path to contain home directory %s, got %s", homeDir, path)
+		// Should contain base directory
+		if !strings.Contains(path, baseDir) {
+			t.Errorf("expected path to contain base directory %s, got %s", baseDir, path)
 		}
 	})
 
@@ -84,6 +86,36 @@ func TestGenerateDBPath(t *testing.T) {
 	})
 }
 
+func TestGenerateDBPathLegacyDirCompatibility(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("CODEXDB_DIR", "")
+	t.Setenv("XDG_DATA_HOME", "")
+
+	dbName := "legacydb"
+	legacyDir := filepath.Join(home, "codex")
+	if err := os.MkdirAll(legacyDir, 0755); err != nil {
+		t.Fatalf("failed to create legacy dir: %v", err)
+	}
+
+	legacyPath := filepath.Join(legacyDir, dbName+"_20200101_000000_deadbeefdeadbeef.db")
+	f, err := os.Create(legacyPath)
+	if err != nil {
+		t.Fatalf("failed to create legacy db file: %v", err)
+	}
+	_ = f.Close()
+	defer os.Remove(legacyPath)
+
+	// Should return the existing legacy DB path instead of creating a new one in ~/.codex.
+	got, err := GenerateDBPath(dbName)
+	if err != nil {
+		t.Fatalf("GenerateDBPath() failed: %v", err)
+	}
+	if got != legacyPath {
+		t.Fatalf("expected legacy path %s, got %s", legacyPath, got)
+	}
+}
+
 func TestGenerateDBPathFormat(t *testing.T) {
 	t.Run("path format is correct", func(t *testing.T) {
 		path, err := GenerateDBPath("testdb")
@@ -127,20 +159,16 @@ func TestGenerateDBPathCreatesDirectory(t *testing.T) {
 
 func TestGetCodexDir(t *testing.T) {
 	t.Run("returns codex directory path", func(t *testing.T) {
+		baseDir := t.TempDir()
+		t.Setenv("CODEXDB_DIR", baseDir)
+
 		codexDir, err := GetCodexDir()
 		if err != nil {
 			t.Fatalf("GetCodexDir() failed: %v", err)
 		}
 
-		// Should contain "codex"
-		if !strings.Contains(codexDir, "codex") {
-			t.Errorf("expected codex dir to contain 'codex', got %s", codexDir)
-		}
-
-		// Should contain home directory
-		homeDir, _ := os.UserHomeDir()
-		if !strings.Contains(codexDir, homeDir) {
-			t.Errorf("expected codex dir to contain home directory %s, got %s", homeDir, codexDir)
+		if codexDir != baseDir {
+			t.Errorf("expected codex dir to be %s, got %s", baseDir, codexDir)
 		}
 	})
 }

@@ -1,0 +1,11 @@
+{
+  "name": "codexdb-local-test",
+  "version": "1.0.0",
+  "description": "Local test project for CodexDB Node.js SDK",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "MIT"
+}

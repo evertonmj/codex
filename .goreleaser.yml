@@ -1,0 +1,86 @@
+version: 2
+
+project_name: codexdb
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: codexdb
+    main: ./cmd/codexdb
+    binary: codexdb
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .ShortCommit }}
+      - -X main.date={{ .Date }}
+
+archives:
+  - id: codexdb
+    builds:
+      - codexdb
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  prerelease: auto
+
+changelog:
+  use: github
+
+brews:
+  - name: codexdb
+    ids:
+      - codexdb
+    description: "CodexDB CLI (file-based key-value DB for Go)"
+    homepage: "https://github.com/evertonmj/codex"
+    license: "MPL-2.0"
+    repository:
+      owner: evertonmj
+      name: homebrew-tap
+    commit_author:
+      name: "goreleaserbot"
+      email: "goreleaserbot@users.noreply.github.com"
+    directory: Formula
+    install: |
+      bin.install "codexdb"
+    extra_install: |
+      bin.install_symlink "codexdb" => "cdx"
+    test: |
+      system "#{bin}/codexdb", "--version"
+
+nfpms:
+  - id: codexdb-deb
+    package_name: codexdb
+    vendor: evertonmj
+    homepage: "https://github.com/evertonmj/codex"
+    maintainer: "evertonmj <noreply@users.noreply.github.com>"
+    description: "CodexDB CLI (file-based key-value DB for Go)"
+    license: MPL-2.0
+    formats:
+      - deb
+    bindir: /usr/bin
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/codexdb/LICENSE
+      - src: README.md
+        dst: /usr/share/doc/codexdb/README.md

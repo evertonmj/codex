@@ -792,6 +792,46 @@ cdx --file=audit.log --ledger set transaction:1 '{"amount":100}'
 cdx --file=audit.log --ledger set transaction:2 '{"amount":200}'
 ```
 
+## 📦 SDKs (Node.js + Python)
+
+CodexDB também pode ser consumido por outras linguagens usando o `codex-cli` como backend. Os SDKs iniciais são wrappers em:
+
+- `sdk/nodejs`
+- `sdk/python`
+
+### Node.js
+
+```bash
+cd sdk/nodejs
+npm install
+node test.js
+```
+
+API básica:
+
+```js
+const CodexClient = require('./index');
+const client = new CodexClient({ file: 'my.db' });
+await client.set('k1', { hello: 'world' });
+console.log(await client.get('k1'));
+```
+
+### Python
+
+```bash
+cd sdk/python
+python test_codex_sdk.py
+```
+
+API básica:
+
+```py
+from codex_sdk import CodexClient
+client = CodexClient(file='my.db')
+client.set('k1', {'hello': 'world'})
+print(client.get('k1'))
+```
+
 ## 🧪 Testing
 
 ### Run All Tests

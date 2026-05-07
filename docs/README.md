@@ -6,6 +6,7 @@ Welcome to the CodexDB documentation! Here you'll find comprehensive guides for 
 
 ### 🚀 Getting Started
 - **[Quick Start](QUICKSTART.md)** - Get up and running in 5 minutes
+- **[Install](INSTALL.md)** - Install `codexdb` via releases, brew, or apt
 - **[README](../README.md)** - Complete feature overview (at root)
 
 ### 📚 User Guides

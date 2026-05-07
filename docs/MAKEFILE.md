@@ -22,16 +22,16 @@ Builds the CLI binary and creates the `cdx` alias.
 
 ```bash
 make build
-# Output: bin/codex-cli and bin/cdx
+# Output: bin/codexdb and bin/cdx
 ```
 
-Both `codex-cli` and `cdx` are identical binaries - `cdx` is just a shorter alias for convenience.
+Both `codexdb` and `cdx` are identical binaries - `cdx` is just a shorter alias for convenience.
 
 **Usage:**
 
 ```bash
 # Using the full name
-./bin/codex-cli --file=my.db get mykey
+./bin/codexdb --file=my.db get mykey
 
 # Using the short alias
 ./bin/cdx --file=my.db get mykey
@@ -42,7 +42,7 @@ Builds CLI (with alias) and all example programs.
 
 ```bash
 make build-all
-# Output: bin/codex-cli, bin/cdx, bin/01_basic_usage, bin/02_complex_data, etc.
+# Output: bin/codexdb, bin/cdx, bin/01_basic_usage, bin/02_complex_data, etc.
 ```
 
 ### `make install`
@@ -50,8 +50,8 @@ Installs the CLI and alias to `$GOPATH/bin` for system-wide access.
 
 ```bash
 make install
-# Both codex-cli and cdx will be available system-wide
-# You can use: codex-cli <command>
+# Both codexdb and cdx will be available system-wide
+# You can use: codexdb <command>
 # Or the alias: cdx <command>
 ```
 
@@ -177,7 +177,7 @@ Builds and runs the CLI in interactive mode.
 
 ```bash
 make run-cli
-# Starts: bin/codex-cli --file=demo.db interactive
+# Starts: bin/codexdb --file=demo.db interactive
 ```
 
 ### `make run-example-<name>`
@@ -366,7 +366,7 @@ make build
 make install
 
 # Test installation
-codex-cli --help
+codexdb --help
 ```
 
 ### CI/CD Workflow

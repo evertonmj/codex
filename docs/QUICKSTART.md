@@ -35,7 +35,7 @@ make clean             # Clean build artifacts
 
 ```bash
 # Build
-go build -o bin/codex-cli ./cmd/codex-cli
+go build -o bin/codexdb ./cmd/codexdb
 
 # Test
 go test ./...
@@ -86,7 +86,7 @@ func main() {
 make build
 
 # Interactive mode
-./bin/codex-cli --file=demo.db interactive
+./bin/codexdb --file=demo.db interactive
 
 # In interactive mode:
 codex > set user:alice '{"name":"Alice","age":30}'
@@ -168,7 +168,7 @@ store.Set("secret", "sensitive data")
 ```
 github.com/evertonmj/codex/
 ├── codex/              # Main package
-├── cmd/codex-cli/      # CLI tool
+├── cmd/codexdb/        # CLI tool
 ├── examples/           # Usage examples
 ├── Makefile            # Build automation
 ├── README.md           # Full documentation
@@ -235,7 +235,7 @@ make pre-release
 make install
 
 # Test installation
-codex-cli --help
+codexdb --help
 ```
 
 ## Troubleshooting
@@ -270,8 +270,8 @@ make clean
 make build
 
 # Check binary
-ls -la bin/codex-cli
-./bin/codex-cli --help
+ls -la bin/codexdb
+./bin/codexdb --help
 ```
 
 ## Quick Reference
@@ -301,19 +301,19 @@ codex.Options{
 ### CLI Commands
 
 ```bash
-./codex-cli --file=db.db set key '"value"'
-./codex-cli --file=db.db get key
-./codex-cli --file=db.db delete key
-./codex-cli --file=db.db keys
-./codex-cli --file=db.db has key
-./codex-cli --file=db.db clear
-./codex-cli --file=db.db interactive
+./codexdb --file=db.db set key '"value"'
+./codexdb --file=db.db get key
+./codexdb --file=db.db delete key
+./codexdb --file=db.db keys
+./codexdb --file=db.db has key
+./codexdb --file=db.db clear
+./codexdb --file=db.db interactive
 ```
 
 ## Getting Help
 
 - `make help` - Show all Makefile commands
-- `./bin/codex-cli --help` - CLI help
+- `./bin/codexdb --help` - CLI help
 - [README.md](README.md) - Full documentation
 - [examples/](examples/) - Code examples
 - [GitHub Issues](https://github.com/evertonmj/codex/issues) - Report bugs

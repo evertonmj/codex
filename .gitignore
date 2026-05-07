@@ -27,8 +27,12 @@ coverage/
 *.db.bak.*
 *.log
 
-# CLI binary
-codex-cli
+# CLI binaries (if built in repo root)
+/codexdb
+/cdx
+
+# GoReleaser output
+dist/
 
 # System files
 .DS_Store

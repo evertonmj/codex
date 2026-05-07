@@ -4,7 +4,6 @@ package path
 import (
 	"crypto/rand"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +12,10 @@ import (
 
 // GenerateDBPath generates a database file path in the user's home directory.
 // Format: ~/.codex/<<NAME>>_<TIMESTAMP>_<RANDOM_HASH>.db
+//
+// The base directory can be overridden via environment variables:
+//   - CODEXDB_DIR: exact directory to store DB files (highest priority)
+//   - XDG_DATA_HOME: uses $XDG_DATA_HOME/codexdb (if set)
 // If name is empty, it uses "codex" as the default name.
 // If a database with the given name already exists, it returns the existing path.
 // Otherwise, it creates a new path with current timestamp and random hash.
@@ -22,14 +25,10 @@ func GenerateDBPath(name string) (string, error) {
 		name = "codex"
 	}
 
-	// Get home directory
-	homeDir, err := os.UserHomeDir()
+	codexDir, err := GetCodexDir()
 	if err != nil {
-		return "", fmt.Errorf("failed to get home directory: %w", err)
+		return "", err
 	}
-
-	// Create codex directory if it doesn't exist
-	codexDir := filepath.Join(homeDir, "codex")
 	if err := os.MkdirAll(codexDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create codex directory: %w", err)
 	}
@@ -38,6 +37,19 @@ func GenerateDBPath(name string) (string, error) {
 	existingPath, err := findExistingDatabase(codexDir, name)
 	if err == nil && existingPath != "" {
 		return existingPath, nil
+	}
+
+	// Backward compatibility: older versions used ~/codex (without the dot).
+	// If a legacy database exists there, reuse it to avoid surprising "missing data" upgrades.
+	// Do not consult the legacy directory if the location was explicitly overridden.
+	if strings.TrimSpace(os.Getenv("CODEXDB_DIR")) == "" && strings.TrimSpace(os.Getenv("XDG_DATA_HOME")) == "" {
+		homeDir, homeErr := os.UserHomeDir()
+		if homeErr == nil {
+			legacyDir := filepath.Join(homeDir, "codex")
+			if legacyPath, legacyErr := findExistingDatabase(legacyDir, name); legacyErr == nil && legacyPath != "" {
+				return legacyPath, nil
+			}
+		}
 	}
 
 	// Generate new database path
@@ -61,7 +73,7 @@ func GenerateDBPath(name string) (string, error) {
 // findExistingDatabase searches for an existing database file with the given name.
 // Returns the path if found, empty string if not found, or error if search fails.
 func findExistingDatabase(dir string, name string) (string, error) {
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return "", err
 	}
@@ -78,9 +90,15 @@ func findExistingDatabase(dir string, name string) (string, error) {
 
 // GetCodexDir returns the path to the codex directory in the user's home.
 func GetCodexDir() (string, error) {
+	if dir := strings.TrimSpace(os.Getenv("CODEXDB_DIR")); dir != "" {
+		return dir, nil
+	}
+	if xdg := strings.TrimSpace(os.Getenv("XDG_DATA_HOME")); xdg != "" {
+		return filepath.Join(xdg, "codexdb"), nil
+	}
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("failed to get home directory: %w", err)
 	}
-	return filepath.Join(homeDir, "codex"), nil
+	return filepath.Join(homeDir, ".codex"), nil
 }

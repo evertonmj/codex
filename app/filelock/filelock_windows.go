@@ -37,7 +37,9 @@ func lock(file *os.File) error {
 	)
 
 	if r1 == 0 {
-		if err == syscall.ERROR_LOCK_VIOLATION {
+		// syscall.ERROR_LOCK_VIOLATION is not available in all Go versions/platform setups,
+		// so compare against the Windows error code (33).
+		if errno, ok := err.(syscall.Errno); ok && errno == 33 {
 			return ErrLocked
 		}
 		return fmt.Errorf("failed to acquire file lock: %w", err)

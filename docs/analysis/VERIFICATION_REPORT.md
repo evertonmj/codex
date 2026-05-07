@@ -342,15 +342,15 @@ Status: ✅ RESOLVED
 
 ```bash
 $ make build
-Building codex-cli...
-go build -o bin/codex-cli ./cmd/codex-cli
-✓ Binary created at bin/codex-cli
+Building codexdb...
+go build -o bin/codexdb ./cmd/codexdb
+✓ Binary created at bin/codexdb
 ✓ Build successful
 
 $ make install
-Installing codex-cli...
-go install ./cmd/codex-cli
-✓ Installed to /Users/everton/go/bin/codex-cli
+Installing codexdb...
+go install ./cmd/codexdb
+✓ Installed to /Users/everton/go/bin/codexdb
 ✓ Alias created at /Users/everton/go/bin/cdx
 ✓ Install successful
 ```

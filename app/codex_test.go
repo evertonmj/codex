@@ -587,6 +587,9 @@ func TestPath(t *testing.T) {
 }
 
 func TestNewHome(t *testing.T) {
+	baseDir := t.TempDir()
+	t.Setenv("CODEXDB_DIR", baseDir)
+
 	t.Run("creates store in home directory with default name", func(t *testing.T) {
 		store, err := NewHome("")
 		if err != nil {
@@ -594,10 +597,10 @@ func TestNewHome(t *testing.T) {
 		}
 		defer store.Close()
 
-		// Verify the path contains codex directory
+		// Verify the path contains configured codex directory
 		path := store.Path()
-		if !strings.Contains(path, filepath.Join("codex", "codex_")) {
-			t.Errorf("expected path to contain codex directory, got %s", path)
+		if !strings.Contains(path, baseDir) || !strings.Contains(path, "codex_") {
+			t.Errorf("expected path to contain %s and codex_ prefix, got %s", baseDir, path)
 		}
 
 		// Verify we can use the store
@@ -624,14 +627,17 @@ func TestNewHome(t *testing.T) {
 
 		// Verify the path contains both codex directory and mydb name
 		path := store.Path()
-		if !strings.Contains(path, "codex") || !strings.Contains(path, "mydb") {
-			t.Errorf("expected path to contain codex directory and mydb name, got %s", path)
+		if !strings.Contains(path, baseDir) || !strings.Contains(path, "mydb") {
+			t.Errorf("expected path to contain %s and mydb name, got %s", baseDir, path)
 		}
 	})
 }
 
 func TestNewHomeWithOptions(t *testing.T) {
 	t.Run("creates store in home directory with encryption", func(t *testing.T) {
+		baseDir := t.TempDir()
+		t.Setenv("CODEXDB_DIR", baseDir)
+
 		key := make([]byte, 32)
 		opts := Options{EncryptionKey: key}
 

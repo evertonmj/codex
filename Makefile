@@ -4,7 +4,7 @@
 .DEFAULT_GOAL := help
 
 # Variables
-BINARY_NAME=codex-cli
+BINARY_NAME=codexdb
 BINARY_ALIAS=cdx
 BUILD_DIR=bin
 COVERAGE_DIR=coverage
@@ -12,6 +12,7 @@ COVERAGE_FILE=$(COVERAGE_DIR)/coverage.out
 GO=go
 GOFLAGS=-v
 EXAMPLES_DIR=examples
+LDFLAGS=-s -w -X 'main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)' -X 'main.commit=$$(git rev-parse --short HEAD 2>/dev/null || echo unknown)' -X 'main.date=$$(date -u +%Y-%m-%dT%H:%M:%SZ)'
 
 # Colors for output
 COLOR_RESET=\033[0m
@@ -28,13 +29,13 @@ help: ## Show this help message
 	@echo ""
 
 # Build targets
-build: ## Build the CLI binary (creates both codex-cli and cdx)
+build: ## Build the CLI binary (creates both codexdb and cdx)
 	@echo "$(COLOR_BOLD)Building $(BINARY_NAME)...$(COLOR_RESET)"
 	@mkdir -p $(BUILD_DIR)
-	$(GO) build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/codex-cli
+	$(GO) build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/codexdb
 	@echo "$(COLOR_GREEN)✓ Binary created at $(BUILD_DIR)/$(BINARY_NAME)$(COLOR_RESET)"
 	@echo "$(COLOR_BOLD)Creating alias $(BINARY_ALIAS)...$(COLOR_RESET)"
-	$(GO) build -o $(BUILD_DIR)/$(BINARY_ALIAS) ./cmd/codex-cli
+	$(GO) build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_ALIAS) ./cmd/codexdb
 	@echo "$(COLOR_GREEN)✓ Alias created at $(BUILD_DIR)/$(BINARY_ALIAS)$(COLOR_RESET)"
 
 build-all: ## Build all binaries and examples
@@ -50,7 +51,7 @@ build-all: ## Build all binaries and examples
 
 install: ## Install the CLI binary and alias to GOPATH/bin
 	@echo "$(COLOR_BOLD)Installing $(BINARY_NAME)...$(COLOR_RESET)"
-	$(GO) install ./cmd/codex-cli
+	$(GO) install -ldflags "$(LDFLAGS)" ./cmd/codexdb
 	@echo "$(COLOR_GREEN)✓ Installed to $$(go env GOPATH)/bin/$(BINARY_NAME)$(COLOR_RESET)"
 	@echo "$(COLOR_BOLD)Creating alias $(BINARY_ALIAS)...$(COLOR_RESET)"
 	@cp $$(go env GOPATH)/bin/$(BINARY_NAME) $$(go env GOPATH)/bin/$(BINARY_ALIAS)

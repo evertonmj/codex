@@ -74,4 +74,6 @@ class CodexClient {
   }
 }
 
-module.exports = CodexClient;
+module.exports = {
+  CodexClient
+};

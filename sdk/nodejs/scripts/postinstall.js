@@ -1,7 +1,10 @@
 const https = require('https');
 const fs = require('fs');
 const os = require('os');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const { https } = require('follow-redirects');
 
 // Map OS/platform to binary URLs
 const BINARIES = {

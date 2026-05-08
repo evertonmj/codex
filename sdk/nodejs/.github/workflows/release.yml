@@ -3,10 +3,12 @@
 
 name: Release Node.js SDK
 
+
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   publish-npm:

@@ -47,26 +47,26 @@ release:
 changelog:
   use: github
 
-brews:
-  - name: codexdb
-    ids:
-      - codexdb
-    description: "CodexDB CLI (file-based key-value DB for Go)"
-    homepage: "https://github.com/evertonmj/codex"
-    license: "MPL-2.0"
-    repository:
-      owner: evertonmj
-      name: homebrew-tap
-    commit_author:
-      name: "goreleaserbot"
-      email: "goreleaserbot@users.noreply.github.com"
-    directory: Formula
-    install: |
-      bin.install "codexdb"
-    extra_install: |
-      bin.install_symlink "codexdb" => "cdx"
-    test: |
-      system "#{bin}/codexdb", "--version"
+# brews:
+#   - name: codexdb
+#     ids:
+#       - codexdb
+#     description: "CodexDB CLI (file-based key-value DB for Go)"
+#     homepage: "https://github.com/evertonmj/codex"
+#     license: "MPL-2.0"
+#     repository:
+#       owner: evertonmj
+#       name: homebrew-tap
+#     commit_author:
+#       name: "goreleaserbot"
+#       email: "goreleaserbot@users.noreply.github.com"
+#     directory: Formula
+#     install: |
+#       bin.install "codexdb"
+#     extra_install: |
+#       bin.install_symlink "codexdb" => "cdx"
+#     test: |
+#       system "#{bin}/codexdb", "--version"
 
 nfpms:
   - id: codexdb-deb

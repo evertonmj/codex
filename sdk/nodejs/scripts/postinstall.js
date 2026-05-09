@@ -1,6 +1,3 @@
-const https = require('https');
-const fs = require('fs');
-const os = require('os');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');

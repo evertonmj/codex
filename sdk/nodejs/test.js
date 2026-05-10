@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const CodexClient = require('./index');
+const { CodexClient } = require('./index');
 
 (async () => {
   const dbPath = path.resolve(__dirname, 'test-db.db');

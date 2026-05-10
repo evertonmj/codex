@@ -46,3 +46,13 @@ docs/SECURITY_AUDIT_FIXES.md
 docs/REFACTORING_INTERNAL_TO_SRC.md
 docs/REFACTORING_INTERNAL_TO_SRC.md
 docs/SECURITY_AUDIT_FIXES.md
+
+sdk/nodejs/node_modules/
+sdk/nodejs/dist/
+sdk/nodejs/codex-cli
+sdk/nodejs/codexdb
+sdk/nodejs/cdx
+sdk/nodejs/*.lock
+sdk/python/.venv/
+sdk/python/dist/
+sdk/python/build/

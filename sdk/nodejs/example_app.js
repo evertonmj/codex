@@ -1,5 +1,5 @@
 const path = require('path');
-const CodexClient = require('./index');
+const { CodexClient } = require('./index');
 
 const dbPath = path.resolve(__dirname, 'example-db.db');
 const client = new CodexClient({ file: dbPath });

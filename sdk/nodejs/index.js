@@ -1,4 +1,6 @@
 const { execFile } = require('child_process');
+const path = require('path');
+const fs = require('fs/promises');
 
 function execCodexCli(cliPath, args, env = {}) {
   return new Promise((resolve, reject) => {
@@ -12,19 +14,49 @@ function execCodexCli(cliPath, args, env = {}) {
   });
 }
 
+async function ensureDataDirectory(dataPath) {
+  try {
+    await fs.mkdir(dataPath, { recursive: true });
+  } catch (error) {
+    if (error.code !== 'EEXIST') {
+      throw error;
+    }
+  }
+}
+
 class CodexClient {
   constructor(options = {}) {
-    if (!options.file) {
-      throw new Error('options.file is required (path to database file)');
+    // If no file is provided, use default: .codex-data/default.db
+    let file = options.file;
+    if (!file) {
+      const dataDir = path.resolve(process.cwd(), '.codex-data');
+      file = path.join(dataDir, 'default.db');
+    } else {
+      // If file is provided but it's just a filename (no path separators),
+      // resolve it relative to current working directory
+      file = path.resolve(process.cwd(), file);
     }
 
     this.cliPath = options.cliPath || 'codex-cli';
-    this.file = options.file;
+    this.file = file;
+    this.dataDir = path.dirname(this.file);
     this.ledger = options.ledger ? '--ledger' : null;
     this.env = {};
 
     if (options.encryptionKey) {
       this.env.CODEX_KEY = options.encryptionKey;
+    }
+  }
+
+  async initialize() {
+    // Create data directory if it doesn't exist
+    await ensureDataDirectory(this.dataDir);
+    this._initialized = true;
+  }
+
+  async _ensureInitialized() {
+    if (!this._initialized) {
+      await this.initialize();
     }
   }
 
@@ -35,6 +67,7 @@ class CodexClient {
   }
 
   async set(key, value) {
+    await this._ensureInitialized();
     const payload = JSON.stringify(value);
     const args = [...this._baseArgs(), 'set', key, payload];
     await execCodexCli(this.cliPath, args, this.env);
@@ -42,6 +75,7 @@ class CodexClient {
   }
 
   async get(key) {
+    await this._ensureInitialized();
     const args = [...this._baseArgs(), 'get', key];
     const raw = await execCodexCli(this.cliPath, args, this.env);
     if (!raw) return null;
@@ -49,12 +83,14 @@ class CodexClient {
   }
 
   async delete(key) {
+    await this._ensureInitialized();
     const args = [...this._baseArgs(), 'delete', key];
     await execCodexCli(this.cliPath, args, this.env);
     return true;
   }
 
   async keys() {
+    await this._ensureInitialized();
     const args = [...this._baseArgs(), 'keys'];
     const raw = await execCodexCli(this.cliPath, args, this.env);
     if (!raw) return [];
@@ -62,12 +98,14 @@ class CodexClient {
   }
 
   async has(key) {
+    await this._ensureInitialized();
     const args = [...this._baseArgs(), 'has', key];
     const raw = await execCodexCli(this.cliPath, args, this.env);
     return raw.trim() === 'true';
   }
 
   async clear() {
+    await this._ensureInitialized();
     const args = [...this._baseArgs(), 'clear'];
     await execCodexCli(this.cliPath, args, this.env);
     return true;

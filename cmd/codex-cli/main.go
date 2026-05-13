@@ -27,7 +27,7 @@ func main() {
 	// Get command and arguments
 	args := flag.Args()
 	if len(args) < 1 {
-		fatalf("Usage: codex-cli [--file path | --home [--name dbname]] [--ledger] <command> [args]\nCommands: set, get, delete, keys, has, clear, interactive")
+		fatalf("Usage: codex-cli [--file path | --home [--name dbname]] [--ledger] <command> [args]\nNote: If no --file or --home is specified, uses .codex-data/database.db in current directory\nCommands: set, get, delete, keys, has, clear, interactive")
 	}
 
 	// Read encryption key from environment variable for security
@@ -70,7 +70,20 @@ func main() {
 		// Use specified file path
 		store, err = codex.NewWithOptions(*filePath, codeOpts)
 	} else {
-		fatalf("Error: must specify either --file <path> or --home [--name <dbname>]")
+		// Default: use .codex-data/database.db in current directory
+		cwd, err := os.Getwd()
+		if err != nil {
+			fatalf("Failed to get current directory: %v", err)
+		}
+		dbPath := filepath.Join(cwd, ".codex-data")
+		if err := os.MkdirAll(dbPath, 0o700); err != nil {
+			fatalf("Failed to create .codex-data directory: %v", err)
+		}
+		dbFile := filepath.Join(dbPath, "database.db")
+		store, err = codex.NewWithOptions(dbFile, codeOpts)
+		if err != nil {
+			fatalf("Failed to open store: %v", err)
+		}
 	}
 
 	if err != nil {

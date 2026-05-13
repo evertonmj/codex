@@ -21,8 +21,8 @@ const osName = OS_MAP[platform];
 const arch = os.arch() === 'arm64' ? 'arm64' : 'amd64';
 
 if (!osName) {
-  console.error(`No binary available for platform: ${platform}`);
-  process.exit(1);
+  console.log(`⚠️  No binary available for platform: ${platform}`);
+  process.exit(0); // Don't fail, just skip
 }
 
 const dest = path.join(__dirname, '..', 'codex-cli' + (platform === 'win32' ? '.exe' : ''));
@@ -42,13 +42,28 @@ https.get(apiUrl, {
     try {
       const release = JSON.parse(data);
       
+      // Check if the API returned an error
+      if (release.message) {
+        console.log(`⚠️  Release v${version} not found on GitHub`);
+        console.log(`   This is normal during development before publishing`);
+        console.log(`   The codex-cli binary will be available after creating a GitHub release`);
+        process.exit(0); // Don't fail, just skip
+      }
+      
+      if (!release.assets || !Array.isArray(release.assets)) {
+        console.log(`⚠️  Invalid release data: no assets found`);
+        process.exit(0); // Don't fail, just skip
+      }
+      
       // Find the correct binary for this platform/arch
       const pattern = `codexdb_${version}_${osName}_${arch}`;
       const asset = release.assets.find(a => a.name.includes(pattern));
       
       if (!asset) {
-        console.error(`No binary found for ${osName}/${arch}`);
-        process.exit(1);
+        console.log(`⚠️  No binary found for ${osName}/${arch}`);
+        console.log(`   Expected pattern: ${pattern}`);
+        console.log(`   Available assets: ${release.assets.map(a => a.name).join(', ')}`);
+        process.exit(0); // Don't fail, just skip
       }
 
       console.log(`Downloading ${asset.name}...`);
@@ -62,8 +77,8 @@ https.get(apiUrl, {
       
       https.get(asset.browser_download_url, (res) => {
         if (res.statusCode !== 200) {
-          console.error(`Failed to download binary: ${res.statusCode}`);
-          process.exit(1);
+          console.log(`⚠️  Failed to download binary: ${res.statusCode}`);
+          process.exit(0); // Don't fail, just skip
         }
         const file = fs.createWriteStream(tempFile);
         res.pipe(file);
@@ -73,17 +88,18 @@ https.get(apiUrl, {
           });
         });
       }).on('error', (err) => {
-        console.error('Download error:', err);
-        process.exit(1);
+        console.log(`⚠️  Download error: ${err.message}`);
+        process.exit(0); // Don't fail, just skip
       });
     } catch (err) {
-      console.error('Failed to parse release info:', err);
-      process.exit(1);
+      console.log(`⚠️  Failed to parse release info: ${err.message}`);
+      process.exit(0); // Don't fail, just skip
     }
   });
 }).on('error', (err) => {
-  console.error('API error:', err);
-  process.exit(1);
+  console.log(`⚠️  API error: ${err.message}`);
+  console.log(`   The codex-cli binary must be downloaded manually or will be installed on first use`);
+  process.exit(0); // Don't fail, just skip
 });
 
 function extractAndInstall(archivePath, archiveName, destPath, tempDir) {
@@ -104,8 +120,8 @@ function extractAndInstall(archivePath, archiveName, destPath, tempDir) {
     const files = execSync(`find ${tempDir} -type f -name 'codex-cli*' -o -name 'codexdb' 2>/dev/null`, { encoding: 'utf-8' }).trim().split('\n').filter(f => f);
     
     if (files.length === 0) {
-      console.error('Binary not found in archive');
-      process.exit(1);
+      console.log('⚠️  Binary not found in archive');
+      process.exit(0); // Don't fail, just skip
     }
     
     const binaryPath = files[0];
@@ -115,9 +131,10 @@ function extractAndInstall(archivePath, archiveName, destPath, tempDir) {
     // Cleanup
     execSync(`rm -rf ${tempDir}`);
     
-    console.log('codex-cli installed to', destPath);
+    console.log('✓ codex-cli installed to', destPath);
+    process.exit(0);
   } catch (err) {
-    console.error('Extraction error:', err.message);
-    process.exit(1);
+    console.log(`⚠️  Extraction error: ${err.message}`);
+    process.exit(0); // Don't fail, just skip
   }
 }

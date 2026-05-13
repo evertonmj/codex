@@ -1,0 +1,34 @@
+# Development and testing
+test.js
+example_app.js
+test-db.db
+example-db.db
+
+# Scripts
+scripts/
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Temp
+.temp-extract/
+*.tmp

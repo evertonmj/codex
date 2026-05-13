@@ -4,8 +4,9 @@ example_app.js
 test-db.db
 example-db.db
 
-# Scripts
-scripts/
+# Scripts (exclude all except postinstall.js)
+scripts/publish.sh
+scripts/publish-check.js
 
 # Dependencies
 node_modules/
@@ -18,6 +19,20 @@ node_modules/
 .vscode/
 .idea/
 *.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Temp
+.temp-extract/
+*.tmp
 *.swo
 *~
 

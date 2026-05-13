@@ -1,10 +1,11 @@
 {
   "name": "codexdb-sdk",
-  "version": "0.1.15",
+  "version": "0.1.19",
   "description": "Node.js SDK for CodexDB (wrapper around codex-cli)",
   "main": "index.js",
   "scripts": {
     "test": "node test.js",
+    "test:unit": "node index.test.js",
     "postinstall": "node scripts/postinstall.js",
     "publish-check": "node scripts/publish-check.js",
     "release": "bash scripts/publish.sh"

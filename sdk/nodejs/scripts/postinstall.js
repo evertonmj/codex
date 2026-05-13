@@ -4,8 +4,9 @@ const path = require('path');
 const { https } = require('follow-redirects');
 const { execSync } = require('child_process');
 
-// Get version from package.json
-const packageJson = require('../package.json');
+// Get package.json path relative to this script
+const packageJsonPath = path.join(__dirname, '..', 'package.json');
+const packageJson = require(packageJsonPath);
 const version = packageJson.version;
 
 // Map platform to OS name in release

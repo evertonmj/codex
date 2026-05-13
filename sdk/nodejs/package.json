@@ -1,6 +1,6 @@
 {
   "name": "codexdb-sdk",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "Node.js SDK for CodexDB (wrapper around codex-cli)",
   "main": "index.js",
   "scripts": {

@@ -129,11 +129,44 @@ npm publish
 echo -e "${GREEN}✓ Published successfully!${NC}"
 echo ""
 
+# Step 9: Create and push git tag
+echo -e "${YELLOW}8️⃣  Creating GitHub tag...${NC}"
+
+# Check if git is available
+if ! command -v git &> /dev/null; then
+  echo -e "${YELLOW}⚠️  git not found, skipping tag creation${NC}"
+else
+  TAG_NAME="sdk-nodejs/v$NEW_VERSION"
+  
+  # Check if tag already exists
+  if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+    echo -e "${YELLOW}⚠️  Tag $TAG_NAME already exists, skipping...${NC}"
+  else
+    # Create annotated tag
+    git tag -a "$TAG_NAME" -m "SDK Node.js Release v$NEW_VERSION"
+    echo -e "${GREEN}✓ Tag created: $TAG_NAME${NC}"
+    
+    # Try to push the tag
+    if git remote get-url origin >/dev/null 2>&1; then
+      echo -e "${YELLOW}Pushing tag to GitHub...${NC}"
+      git push origin "$TAG_NAME" 2>/dev/null || echo -e "${YELLOW}⚠️  Could not push tag (check git permissions)${NC}"
+      echo -e "${GREEN}✓ Tag pushed to GitHub${NC}"
+    fi
+  fi
+fi
+
 echo -e "${GREEN}🎉 CodexDB SDK@$NEW_VERSION published to npm!${NC}"
 echo ""
+echo "Summary:"
+echo "  ✓ Version bumped to $NEW_VERSION"
+echo "  ✓ Tests passed"
+echo "  ✓ Published to npm: https://www.npmjs.com/package/codexdb-sdk/v/$NEW_VERSION"
+echo "  ✓ Git tag created: sdk-nodejs/v$NEW_VERSION"
+echo ""
 echo "Next steps:"
-echo "  - Verify at: https://www.npmjs.com/package/codexdb-sdk/v/$NEW_VERSION"
 echo "  - Test installation: npm install codexdb-sdk@$NEW_VERSION"
-echo "  - Create GitHub release: https://github.com/evertonmj/codex/releases/new"
+echo "  - View on npm: https://www.npmjs.com/package/codexdb-sdk"
+echo "  - Create GitHub release: https://github.com/evertonmj/codex/releases/new?tag=sdk-nodejs/v$NEW_VERSION"
+
 
 

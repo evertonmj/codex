@@ -1,6 +1,12 @@
 const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs/promises');
+const fsSync = require('fs');
+
+function defaultCliPath() {
+  const localBinary = path.join(__dirname, 'codex-cli' + (process.platform === 'win32' ? '.exe' : ''));
+  return fsSync.existsSync(localBinary) ? localBinary : 'codex-cli';
+}
 
 function execCodexCli(cliPath, args, env = {}) {
   return new Promise((resolve, reject) => {
@@ -37,7 +43,7 @@ class CodexClient {
       file = path.resolve(process.cwd(), file);
     }
 
-    this.cliPath = options.cliPath || 'codex-cli';
+    this.cliPath = options.cliPath || defaultCliPath();
     this.file = file;
     this.dataDir = path.dirname(this.file);
     this.ledger = options.ledger ? '--ledger' : null;

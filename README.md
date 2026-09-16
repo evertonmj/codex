@@ -7,6 +7,11 @@
 
 **CodexDB is a simple, fast, and persistent file-based key-value database for Go, with optional support for encryption, data integrity checks, automatic backups, and an append-only ledger mode.**
 
+Snapshots now save readable JSON values by default; AES-GCM encryption remains opt-in via `Options.EncryptionKey`. Legacy base64 snapshots remain readable and are upgraded on their next write (older versions cannot read the new snapshot format).
+
+For embedded use in Node.js and other languages, build the compiled C ABI library with `make build-shared`, or the Node-API addon with `make build-node`. No server or CLI subprocess is needed. See [Node.js native usage](sdk/nodejs-native/README.md) and [C ABI protocol and Python example](docs/NATIVE_LIBRARY.md).
+
+
 It is designed to be a lightweight, embedded database solution for projects that need structured data persistence without the overhead of a full database server. Perfect for desktop applications, configuration management, caching, session storage, and small to medium-sized services.
 
 ### ✅ Production Ready
@@ -574,7 +579,7 @@ store.Delete("balance")       // Deletion is logged
 // But the ledger file contains full history
 ```
 
-**Note:** Ledger mode and encryption are mutually exclusive.
+**Note:** Ledger mode supports optional encryption and keeps its binary frame format.
 
 ### 3. Automatic Backups
 

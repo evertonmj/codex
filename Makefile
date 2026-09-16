@@ -95,10 +95,11 @@ test-examples: ## Run example tests to verify examples work
 test-coverage: ## Run tests with coverage report
 	@echo "$(COLOR_BOLD)Running tests with coverage...$(COLOR_RESET)"
 	@mkdir -p $(COVERAGE_DIR)
-	$(GO) test ./app/... ./tests -coverprofile=$(COVERAGE_FILE)
+	$(GO) test -count=1 ./app/... ./internal/native ./cmd/codex-shared ./tests -coverpkg=./app/...,./internal/native,./cmd/codex-shared -coverprofile=$(COVERAGE_FILE)
 	@echo ""
 	@echo "$(COLOR_BOLD)Coverage Summary:$(COLOR_RESET)"
 	@$(GO) tool cover -func=$(COVERAGE_FILE) | grep total
+	@$(GO) tool cover -func=$(COVERAGE_FILE) | awk '/^total:/ { gsub(/%/, "", $$3); if ($$3 < 95) { print "Coverage below required 95%: " $$3 "%"; exit 1 } }'
 	@echo ""
 	@echo "$(COLOR_YELLOW)View detailed coverage:$(COLOR_RESET) make coverage-html"
 
@@ -432,3 +433,18 @@ info: ## Show project information
 	@echo ""
 	@echo "$(COLOR_BLUE)Coverage:$(COLOR_RESET)"
 	@$(MAKE) --no-print-directory test-coverage 2>&1 | grep -E "coverage:|total" || echo "  Run 'make test-coverage' first"
+
+# Embedded library and Node-API bindings
+SHARED_EXT ?= so
+NODE_INCLUDE_DIR ?= /usr/include/node
+
+build-shared: ## Build the C ABI shared library and generated header
+	@mkdir -p $(BUILD_DIR)
+	CGO_ENABLED=1 $(GO) build -buildmode=c-shared -o $(BUILD_DIR)/libcodex.$(SHARED_EXT) ./cmd/codex-shared
+
+build-node: ## Build the embedded Node.js addon and shared library
+	NODE_INCLUDE_DIR=$(NODE_INCLUDE_DIR) node sdk/nodejs-native/scripts/build.js
+
+test-native: build-node ## Test the embedded library in Node.js and Python
+	node --experimental-test-coverage --test sdk/nodejs-native/test.js
+	python3 sdk/python-native/test_native.py sdk/nodejs-native/build/libcodex.$(SHARED_EXT)

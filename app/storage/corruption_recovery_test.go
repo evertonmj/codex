@@ -108,21 +108,16 @@ func TestLedgerChecksumValidation(t *testing.T) {
 		}
 	}
 
-	// Try to load - should detect corruption and recover (no entries)
+	// An unreadable first entry must fail closed; there is no valid prefix to recover.
 	l2, err := NewLedger(opts)
 	if err != nil {
 		t.Fatalf("NewLedger() after corruption failed: %v", err)
 	}
 	defer l2.Close()
 
-	data, err := l2.Load()
-	if err != nil {
-		t.Fatalf("Load() after corruption failed: %v", err)
-	}
-
-	// Should have no entries after detecting corruption
-	if len(data) != 0 {
-		t.Errorf("Expected 0 entries after checksum failure, got %d", len(data))
+	_, err = l2.Load()
+	if err == nil {
+		t.Fatal("unreadable first entry must fail instead of opening an empty database")
 	}
 
 	t.Log("Checksum validation correctly detected corruption")

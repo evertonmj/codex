@@ -166,6 +166,7 @@ func NewWithOptions(path string, opts Options) (*Store, error) {
 
 	data, err := store.storer.Load()
 	if err != nil && !os.IsNotExist(err) {
+		store.storer.Close()
 		return nil, fmt.Errorf("failed to load data: %w", err)
 	}
 

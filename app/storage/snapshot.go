@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -65,6 +66,20 @@ func (s *Snapshot) Load() (map[string][]byte, error) {
 		return nil, fmt.Errorf("integrity verification failed: %w", err)
 	}
 
+	var envelope struct {
+		Format int                        `json:"format"`
+		Values map[string]json.RawMessage `json:"values"`
+	}
+	if err := json.Unmarshal(rawData, &envelope); err == nil && envelope.Format == 2 {
+		data := make(map[string][]byte, len(envelope.Values))
+		for key, value := range envelope.Values {
+			var compact bytes.Buffer
+			json.Compact(&compact, value) // RawMessage values were validated by Unmarshal.
+			data[key] = compact.Bytes()
+		}
+		return data, nil
+	}
+	// Legacy snapshots encoded []byte values as base64.
 	data := make(map[string][]byte)
 	if err := json.Unmarshal(rawData, &data); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal snapshot data: %w", err)
@@ -75,7 +90,14 @@ func (s *Snapshot) Load() (map[string][]byte, error) {
 
 // Persist signs, compresses, encrypts, and writes a data snapshot to disk.
 func (s *Snapshot) Persist(req PersistRequest) error {
-	storeData, err := json.Marshal(req.Data)
+	values := make(map[string]json.RawMessage, len(req.Data))
+	for key, value := range req.Data {
+		values[key] = json.RawMessage(value)
+	}
+	storeData, err := json.Marshal(struct {
+		Format int                        `json:"format"`
+		Values map[string]json.RawMessage `json:"values"`
+	}{2, values})
 	if err != nil {
 		return fmt.Errorf("failed to marshal data for snapshot: %w", err)
 	}

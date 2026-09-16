@@ -51,7 +51,7 @@ Cada linha representa uma chamada independente. `open` retorna um handle; `keys`
 {"ok":false,"result":null,"error":"key not found: missing","code":"NOT_FOUND"}
 ```
 
-Códigos: `NOT_FOUND`, `LOCKED`, `INVALID_KEY`, `CODEX_ERROR`. Em erros, use `ok`/`code`; `result` não representa sucesso. Snapshot é o padrão; criptografia só é ativada por chave explícita. As chaves têm 16, 24 ou 32 bytes UTF-8 e não são senhas derivadas automaticamente. O modo ledger mantém a estrutura binária de frames.
+Códigos: `NOT_FOUND`, `LOCKED`, `INVALID_KEY`, `CODEX_ERROR`. Em erros, use `ok`/`code`; `result` não representa sucesso. Snapshot é o padrão; criptografia só é ativada por chave explícita. As chaves têm 16, 24 ou 32 bytes UTF-8 e não são senhas derivadas automaticamente. O modo ledger mantém a estrutura binária de frames. Uma primeira entrada ilegível retorna erro, para evitar abrir como vazio um banco com chave/configuração incorreta. A recuperação de corrupção em entradas posteriores mantém o prefixo válido.
 
 ## Snapshot JSON versão 2
 
@@ -71,3 +71,7 @@ Códigos: `NOT_FOUND`, `LOCKED`, `INVALID_KEY`, `CODEX_ERROR`. Em erros, use `ok
 O checksum continua sendo verificado antes da leitura. A biblioteca lê os snapshots legados que armazenavam bytes como base64, inclusive com criptografia/compressão configuradas. Na próxima escrita, usa versão 2. Arquivos criptografados exigem sua chave original e continuam criptografados; não há migração implícita para plaintext. A mudança não é legível por versões antigas da biblioteca: guarde backup antes de atualizar se precisar fazer downgrade.
 
 Para remover criptografia de um arquivo existente, abra com a chave original, copie seus valores para um banco novo sem `EncryptionKey` e feche ambos. Para uso Go, `codex.New(path)` grava plaintext e `codex.NewWithOptions(path, codex.Options{EncryptionKey: key})` ativa AES-GCM.
+
+## Verificação
+
+`make test-coverage` mede cobertura agregada dos pacotes `app/...`, `internal/native` e `cmd/codex-shared`, executando também os testes de integração, e falha abaixo de 95%. Os comandos CLI, benchmarks e exemplos existentes não entram nesse denominador; são verificados por `go test -race ./...`. `make test-native` verifica o addon compilado em Node.js e a ABI em Python.

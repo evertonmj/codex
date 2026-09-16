@@ -1,4 +1,4 @@
-.PHONY: help build test test-verbose test-coverage test-integration test-unit clean install run-cli run-examples lint fmt vet benchmark performance docs purge prune-regen prune-regen-validate
+.PHONY: help build test test-verbose test-coverage test-integration test-unit clean install run-cli run-examples lint fmt vet benchmark performance docs purge prune-regen prune-regen-validate build-shared build-node test-native
 
 # Default target
 .DEFAULT_GOAL := help

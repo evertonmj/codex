@@ -11,7 +11,6 @@ Snapshots now save readable JSON values by default; AES-GCM encryption remains o
 
 For embedded use in Node.js and other languages, build the compiled C ABI library with `make build-shared`, or the Node-API addon with `make build-node`. No server or CLI subprocess is needed. See [Node.js native usage](sdk/nodejs-native/README.md) and [C ABI protocol and Python example](docs/NATIVE_LIBRARY.md).
 
-
 It is designed to be a lightweight, embedded database solution for projects that need structured data persistence without the overhead of a full database server. Perfect for desktop applications, configuration management, caching, session storage, and small to medium-sized services.
 
 ### ✅ Production Ready
@@ -51,6 +50,7 @@ CodexDB is now **production-grade** with enterprise-level concurrency support:
 - [Advanced Features](#-advanced-features)
 - [Architecture](#-architecture)
 - [CLI Tool](#-cli-tool)
+- [SDKs and Embedded Library](#-sdks-nodejs--python)
 - [Testing](#-testing)
 - [Performance](#-performance)
 - [Examples](#-examples)
@@ -432,6 +432,12 @@ store.Set("tags", tags)
 
 ### 1. Encryption
 
+Encryption is disabled by default: `codex.New("data.json")` saves readable JSON values in a snapshot with an integrity checksum. To enable AES-GCM, explicitly pass `Options.EncryptionKey` as shown below.
+
+Legacy base64 snapshots remain readable and are upgraded on their next write. Encrypted files still require their original key; removing the key from configuration does not decrypt an existing file. To remove encryption, open the original store with its key and copy its values into a new store without encryption. Older CodexDB versions cannot read the new snapshot format.
+
+Ledger mode retains its binary append-only format even when encryption is disabled.
+
 Protect sensitive data with AES-GCM encryption:
 
 ```go
@@ -799,12 +805,101 @@ cdx --file=audit.log --ledger set transaction:2 '{"amount":200}'
 
 ## 📦 SDKs (Node.js + Python)
 
-CodexDB também pode ser consumido por outras linguagens usando o `codex-cli` como backend. Os SDKs iniciais são wrappers em:
+### Biblioteca compilada para Node.js
 
-- `sdk/nodejs`
-- `sdk/python`
+O módulo `sdk/nodejs-native` carrega o CodexDB dentro do processo Node.js. Os dados são persistidos diretamente pela biblioteca Go compilada. As chamadas são síncronas; para operações intensivas, use um Worker para evitar bloquear o event loop.
 
-### Node.js
+**Pré-requisitos para compilar:** Go na versão indicada em `go.mod`, compilador C, CGO habilitado e headers do Node.js. O pacote requer Node.js 18 ou superior. Execute na raiz do repositório:
+
+```bash
+make build-node
+
+# Se os headers do Node estiverem em outro diretório:
+make build-node NODE_INCLUDE_DIR=/caminho/para/include/node
+```
+
+A compilação gera `sdk/nodejs-native/build/codex.node`, `libcodex.h` e `libcodex.so` (Linux) ou `libcodex.dylib` (macOS).
+
+Para importar diretamente do checkout, crie este arquivo na raiz do repositório:
+
+```js
+const { CodexDatabase } = require('./sdk/nodejs-native');
+
+const db = new CodexDatabase({ file: './dados.json' });
+try {
+  db.set('usuario', { nome: 'João', ativo: true });
+  console.log(db.get('usuario'));
+  console.log(db.has('usuario'));
+  console.log(db.keys());
+  db.delete('usuario');
+  db.clear();
+} finally {
+  db.close();
+}
+```
+
+Para instalar o pacote compilado em outro projeto, execute naquele projeto:
+
+```bash
+npm install /caminho/absoluto/para/codex/sdk/nodejs-native --ignore-scripts
+```
+
+Depois importe com `const { CodexDatabase } = require('codexdb-native')`. O pacote é local e não foi publicado no npm. Quem recebe o pacote já compilado não precisa de Go nem compilador C; distribua o addon e a biblioteca compartilhada juntos, mantendo a pasta `build`.
+
+Sem `file`, o banco usa `.codex-data/default.db`. `get()` lança erro com `code = 'NOT_FOUND'` quando a chave não existe; um valor JSON `null` é retornado normalmente. Sempre use `close()` para liberar o bloqueio do arquivo. Apenas uma instância/processo pode abrir o mesmo arquivo por vez.
+
+**Criptografia opcional no Node.js:**
+
+```js
+const { CodexDatabase } = require('./sdk/nodejs-native');
+
+const encryptionKey = process.env.MY_DATABASE_KEY;
+if (!encryptionKey || ![16, 24, 32].includes(Buffer.byteLength(encryptionKey, 'utf8'))) {
+  throw new Error('MY_DATABASE_KEY deve conter 16, 24 ou 32 bytes UTF-8');
+}
+
+const db = new CodexDatabase({ file: './encrypted.db', encryptionKey });
+try {
+  db.set('segredo', { token: 'exemplo' });
+  console.log(db.get('segredo'));
+} finally {
+  db.close();
+}
+```
+
+Use a mesma chave em todas as reaberturas. Sem `encryptionKey`, o snapshot é salvo como JSON legível. `CODEX_KEY` não configura o módulo nativo. Para ledger, passe `ledger: true` em todas as aberturas desse arquivo; esse modo mantém o formato binário existente.
+
+O script de build do addon suporta Linux e macOS; Linux amd64 foi validado. Cada sistema operacional, arquitetura e libc exige seu próprio build. O addon Windows ainda não está implementado. Veja [o guia completo do módulo Node.js](sdk/nodejs-native/README.md).
+
+### Biblioteca compartilhada para outras linguagens
+
+Para gerar a biblioteca com API C e seu header:
+
+```bash
+make build-shared                   # Linux: bin/libcodex.so e bin/libcodex.h
+make build-shared SHARED_EXT=dylib   # macOS, usando toolchain local
+make build-shared SHARED_EXT=dll     # Windows, usando toolchain local
+```
+
+A extensão não faz cross-compilation: compile com a toolchain apropriada para a plataforma de destino. A API exporta `CodexCall` (recebe e retorna JSON UTF-8) e `CodexFree` (libera a resposta). Linguagens com FFI podem chamar essa API, mantendo um handle por banco e fechando-o ao terminar.
+
+O [protocolo da API C](docs/NATIVE_LIBRARY.md) documenta as operações e a propriedade da memória. O [exemplo executável em Python com ctypes](sdk/python-native/test_native.py) usa apenas a biblioteca padrão:
+
+```bash
+python3 sdk/python-native/test_native.py bin/libcodex.so
+```
+
+Para testar a integração compilada em Node.js e Python:
+
+```bash
+make test-native
+```
+
+### SDKs existentes baseados na CLI
+
+Os wrappers em `sdk/nodejs` e `sdk/python` continuam disponíveis e usam o executável `codex-cli` como backend.
+
+**Node.js:**
 
 ```bash
 cd sdk/nodejs
@@ -812,23 +907,19 @@ npm install
 node test.js
 ```
 
-API básica:
-
 ```js
-const CodexClient = require('./index');
+const { CodexClient } = require('./index');
 const client = new CodexClient({ file: 'my.db' });
 await client.set('k1', { hello: 'world' });
 console.log(await client.get('k1'));
 ```
 
-### Python
+**Python:**
 
 ```bash
 cd sdk/python
 python test_codex_sdk.py
 ```
-
-API básica:
 
 ```py
 from codex_sdk import CodexClient
@@ -855,15 +946,20 @@ go test -cover ./...
 ### Coverage Report
 
 ```bash
-# Generate coverage report
-go test ./... -coverprofile=coverage.out
+# Test library packages and enforce minimum aggregate coverage of 95%
+make test-coverage
 
-# View in browser
-go tool cover -html=coverage.out
+# Generate the HTML report
+make coverage-html
 
-# View summary
-go tool cover -func=coverage.out
+# Test the entire Go repository with race detection
+go test -race ./...
+
+# Test the compiled Node.js addon and the C ABI through Python
+make test-native
 ```
+
+The coverage gate measures `app/...`, `internal/native` and `cmd/codex-shared`, including integration-test coverage. Existing CLI commands, benchmarks and examples are outside this denominator and are checked by the full Go suite.
 
 ### Test by Package
 
@@ -889,14 +985,7 @@ go test ./codex -run TestIntegration_Encryption
 
 ### Current Coverage
 
-- **Overall**: 90.3%
-- **codex**: 93.9%
-- **errors**: 100%
-- **logger**: 98.4%
-- **encryption**: 85%
-- **integrity**: 94.1%
-- **storage**: 80.9%
-- **backup**: 77.8%
+The embedded Go library reached **96.4% statement coverage**, and the native Node.js wrapper reached **100% line, branch and function coverage** in local verification on Linux amd64. Run the commands above to refresh these results for your checkout.
 
 ## ⚡ Performance
 

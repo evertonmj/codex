@@ -10,35 +10,35 @@ Performance tests are separated from unit tests using build tags to avoid runnin
 
 ```bash
 # Run performance test functions
-go test -tags=performance -v ./codex -run Performance
+go test -tags=performance -v ./app -run Performance
 
 # Run benchmarks
-go test -bench=. -benchmem ./codex
+go test -bench=. -benchmem ./app
 ```
 
 ### Run Specific Performance Tests
 
 ```bash
 # Run specific test
-go test -tags=performance -v ./codex -run TestPerformance_ThroughputSimple
+go test -tags=performance -v ./app -run TestPerformance_ThroughputSimple
 
 # Run specific benchmark
-go test -bench=BenchmarkSet -benchmem ./codex
+go test -bench=BenchmarkSet -benchmem ./app
 
 # Run with more iterations
-go test -bench=BenchmarkSet -benchtime=10s ./codex
+go test -bench=BenchmarkSet -benchtime=10s ./app
 ```
 
 ### Save Benchmark Results
 
 ```bash
 # Save results to file
-go test -bench=. -benchmem ./codex > benchmarks.txt
+go test -bench=. -benchmem ./app > benchmarks.txt
 
 # Compare two runs
-go test -bench=. ./codex > old.txt
+go test -bench=. ./app > old.txt
 # ... make changes ...
-go test -bench=. ./codex > new.txt
+go test -bench=. ./app > new.txt
 benchstat old.txt new.txt
 ```
 
@@ -67,7 +67,7 @@ These tests provide detailed performance analysis:
 ### 1. Throughput Tests
 
 ```bash
-go test -tags=performance -v ./codex -run TestPerformance_Throughput
+go test -tags=performance -v ./app -run TestPerformance_Throughput
 ```
 
 - **ThroughputSimple**: Sequential write throughput
@@ -76,7 +76,7 @@ go test -tags=performance -v ./codex -run TestPerformance_Throughput
 ### 2. Scalability Tests
 
 ```bash
-go test -tags=performance -v ./codex -run TestPerformance_Scalability
+go test -tags=performance -v ./app -run TestPerformance_Scalability
 ```
 
 Tests performance across different dataset sizes (100 to 50,000 keys).
@@ -84,7 +84,7 @@ Tests performance across different dataset sizes (100 to 50,000 keys).
 ### 3. Concurrency Tests
 
 ```bash
-go test -tags=performance -v ./codex -run TestPerformance_ConcurrentLoad
+go test -tags=performance -v ./app -run TestPerformance_ConcurrentLoad
 ```
 
 Tests performance with 1 to 16 concurrent workers.
@@ -92,7 +92,7 @@ Tests performance with 1 to 16 concurrent workers.
 ### 4. Memory Tests
 
 ```bash
-go test -tags=performance -v ./codex -run TestPerformance_MemoryUsage
+go test -tags=performance -v ./app -run TestPerformance_MemoryUsage
 ```
 
 Analyzes file size and bytes per key across different dataset sizes.
@@ -101,16 +101,16 @@ Analyzes file size and bytes per key across different dataset sizes.
 
 ```bash
 # Encryption overhead
-go test -tags=performance -v ./codex -run TestPerformance_EncryptionOverhead
+go test -tags=performance -v ./app -run TestPerformance_EncryptionOverhead
 
 # Ledger vs Snapshot comparison
-go test -tags=performance -v ./codex -run TestPerformance_LedgerVsSnapshot
+go test -tags=performance -v ./app -run TestPerformance_LedgerVsSnapshot
 ```
 
 ### 6. Persistence Tests
 
 ```bash
-go test -tags=performance -v ./codex -run TestPerformance_PersistenceReload
+go test -tags=performance -v ./app -run TestPerformance_PersistenceReload
 ```
 
 Measures database reload times for different sizes.
@@ -216,21 +216,21 @@ wg.Wait()
 ### CPU Profiling
 
 ```bash
-go test -bench=BenchmarkSet -cpuprofile=cpu.prof ./codex
+go test -bench=BenchmarkSet -cpuprofile=cpu.prof ./app
 go tool pprof cpu.prof
 ```
 
 ### Memory Profiling
 
 ```bash
-go test -bench=BenchmarkSet -memprofile=mem.prof ./codex
+go test -bench=BenchmarkSet -memprofile=mem.prof ./app
 go tool pprof mem.prof
 ```
 
 ### Trace Analysis
 
 ```bash
-go test -bench=BenchmarkSet -trace=trace.out ./codex
+go test -bench=BenchmarkSet -trace=trace.out ./app
 go tool trace trace.out
 ```
 
@@ -348,12 +348,12 @@ If you identify performance bottlenecks or have optimization ideas:
 Example:
 ```bash
 # Before
-go test -bench=BenchmarkSet ./codex > before.txt
+go test -bench=BenchmarkSet ./app > before.txt
 
 # Make changes
 
 # After
-go test -bench=BenchmarkSet ./codex > after.txt
+go test -bench=BenchmarkSet ./app > after.txt
 
 # Compare
 benchstat before.txt after.txt

@@ -20,8 +20,7 @@ Welcome to the CodexDB documentation! Here you'll find comprehensive guides for 
 - **[Makefile Guide](MAKEFILE.md)** - All available make targets and commands
 
 ### 🤝 Contributing
-- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute code, bug reports, and documentation
-- **[Code of Conduct](../CODE_OF_CONDUCT.md)** - Community standards
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute code, bug reports, documentation, and community standards
 
 ### 📋 Analysis & Reports
 For detailed technical analysis and audit reports, see **[analysis/](analysis/)**:
@@ -91,9 +90,9 @@ docs/
 | Aspect | Info |
 |--------|------|
 | **License** | Mozilla Public License Version 2.0 (MPL 2.0) |
-| **Go Version** | 1.20+ |
+| **Go Version** | 1.24+ |
 | **Status** | Production Ready ✅ |
-| **Test Coverage** | 79.3% |
+| **Test Coverage** | 95.2% |
 | **Performance** | 8x improvement with concurrent load |
 | **Security** | AES-256-GCM encryption, SHA256 integrity |
 

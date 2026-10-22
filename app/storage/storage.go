@@ -13,6 +13,7 @@ package storage
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/evertonmj/codex/app/compression"
 	"github.com/evertonmj/codex/app/filelock"
@@ -21,6 +22,10 @@ import (
 // Re-export filelock.ErrLocked for convenience
 var ErrLocked = filelock.ErrLocked
 
+// ErrCorrupted is returned (or wrapped) when on-disk data fails integrity
+// verification, e.g. a checksum mismatch or an invalid ledger frame.
+var ErrCorrupted = errors.New("data integrity check failed: database may be corrupted")
+
 // PersistOp defines the type of operation for the ledger.
 type PersistOp int
 
@@ -28,6 +33,12 @@ const (
 	OpSet PersistOp = iota
 	OpDelete
 	OpClear
+	// OpBatchBegin and OpBatchEnd bracket a batch written by PersistBatch.
+	// Entries between the markers are applied during replay only when the
+	// commit marker (OpBatchEnd) is present, so a partially written batch
+	// is discarded on load.
+	OpBatchBegin
+	OpBatchEnd
 )
 
 // PersistRequest holds the data for a persistence operation.

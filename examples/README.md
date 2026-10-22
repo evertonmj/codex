@@ -82,7 +82,7 @@ Shows thread-safe concurrent operations:
 
 ### Installation
 
-1. Make sure you have Go 1.20 or higher installed:
+1. Make sure you have Go 1.24 or higher installed:
 ```bash
 go version
 ```
@@ -93,7 +93,7 @@ git clone <repository-url>
 cd codex
 ```
 
-3. No additional dependencies required! Codex uses only Go standard library.
+3. Dependencies are fetched automatically by the Go toolchain (`go mod download`).
 
 ### Basic Usage
 
@@ -239,7 +239,7 @@ store.Set("cp1", products)
   - Audit trails
   - Compliance requirements
   - Operation history
-  - Cannot be used with encryption
+  - Encryption is supported in ledger mode too (pass `EncryptionKey` together with `LedgerMode`)
 
 ### 5. Encryption Key Management
 ```go
@@ -287,12 +287,12 @@ key := make([]byte, 32) // AES-256
 rand.Read(key)
 ```
 
-### Error: "LedgerMode and EncryptionKey are not compatible"
+### Ledger mode with encryption
 ```go
-// Choose one or the other, not both
+// Ledger mode supports encryption - pass both options together
 opts := codex.Options{
-    LedgerMode: true,
-    // EncryptionKey: key, // Remove this
+    LedgerMode:    true,
+    EncryptionKey: key, // 16, 24, or 32 bytes
 }
 ```
 
@@ -307,7 +307,7 @@ opts := codex.Options{
 ## Next Steps
 
 - Read the main [README](../README.md) for detailed documentation
-- Check out the [test files](../codex) for more usage examples
+- Check out the [test files](../app) for more usage examples
 - Run the performance tests to understand characteristics
 - Review the source code for implementation details
 

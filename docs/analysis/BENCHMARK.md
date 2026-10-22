@@ -250,6 +250,6 @@ Track performance over time:
 make benchmark-save
 
 # Compare with baseline later
-go test -bench=. -benchmem ./codex > new_results.txt
+go test -tags=performance -bench=. -benchmem ./app > new_results.txt
 benchcmp baseline.txt new_results.txt
 ```

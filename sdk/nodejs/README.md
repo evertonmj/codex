@@ -34,6 +34,15 @@ client.delete('user:1');
 
 ## codex-cli Binary
 
-When you install this package, the correct `codex-cli` binary for your platform will be downloaded automatically from the GitHub releases page. No manual installation is required.
+When you install this package, the postinstall script makes a **best-effort**
+attempt to download the correct `codex-cli` binary for your platform from the
+GitHub releases page. If the release or a matching asset is not available (for
+example before a release is published, on an unsupported platform, or without
+network access), the installation **succeeds without installing a binary** —
+the script prints a warning and exits cleanly instead of failing.
 
-If you want to use a custom binary, set the `cliPath` option when creating the client.
+In that case you must provide the binary yourself:
+
+- Build it from source with `make build` (produces `bin/codex-cli`), or
+- Download it manually from the GitHub releases page, and
+- Point the client at it with the `cliPath` option when creating the client.

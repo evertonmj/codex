@@ -20,7 +20,7 @@ Following a comprehensive security audit (ChatGPT analysis), we identified and s
 
 **Fix Implemented**:
 - Added `file.Sync()` after every write in `Persist()` method
-- File: [ledger.go:112-114](../codex/src/storage/ledger.go#L112-L114)
+- File: [ledger.go:112-114](../app/storage/ledger.go#L112-L114)
 
 **Code Changes**:
 ```go
@@ -55,7 +55,7 @@ return nil
 - Added SHA-256 checksum to every ledger entry
 - Implemented graceful recovery that truncates at first corrupted entry
 - Preserves all valid entries before corruption
-- Files: [ledger.go:127](../codex/src/storage/ledger.go#L127), [ledger.go:32-108](../codex/src/storage/ledger.go#L32-L108)
+- Files: [ledger.go:127](../app/storage/ledger.go#L127), [ledger.go:32-108](../app/storage/ledger.go#L32-L108)
 
 **Frame Format**:
 ```
@@ -106,15 +106,15 @@ if readErr != nil || checksumFailed {
 **Impact**: HIGH - Data corruption from concurrent writes
 
 **Fix Implemented**:
-- Created cross-platform file locking package: [filelock/](../codex/src/filelock/)
+- Created cross-platform file locking package: [filelock/](../app/filelock/)
 - Unix implementation using `flock(2)` with `LOCK_EX | LOCK_NB`
 - Windows implementation using `LockFileEx` with exclusive + non-blocking flags
 - Integrated into both Snapshot and Ledger storers
 
 **Files Created**:
-- [filelock.go](../codex/src/filelock/filelock.go) - Public API
-- [filelock_unix.go](../codex/src/filelock/filelock_unix.go) - Unix/macOS/Linux
-- [filelock_windows.go](../codex/src/filelock/filelock_windows.go) - Windows
+- [filelock.go](../app/filelock/filelock.go) - Public API
+- [filelock_unix.go](../app/filelock/filelock_unix.go) - Unix/macOS/Linux
+- [filelock_windows.go](../app/filelock/filelock_windows.go) - Windows
 
 **Implementation Details**:
 
@@ -174,7 +174,7 @@ r1, _, err := procLockFileEx.Call(
 **Fix Implemented**:
 - Exported four sentinel errors from main package
 - Updated all error returns to wrap sentinel errors
-- File: [codex.go:55-67](../codex/codex.go#L55-L67)
+- File: [codex.go:55-67](../app/codex.go#L55-L67)
 
 **Sentinel Errors**:
 ```go
@@ -457,4 +457,4 @@ All critical security and durability issues identified in the audit have been su
 - Original Audit: ChatGPT Security Analysis (2025-10-27)
 - Implementation: [GitHub PR #XXX]
 - Documentation: [SECURITY.md](SECURITY.md), [README.md](../README.md)
-- Tests: [corruption_recovery_test.go](../codex/src/storage/corruption_recovery_test.go), [sentinel_errors_test.go](../codex/sentinel_errors_test.go)
+- Tests: [corruption_recovery_test.go](../app/storage/corruption_recovery_test.go), [sentinel_errors_test.go](../app/sentinel_errors_test.go)

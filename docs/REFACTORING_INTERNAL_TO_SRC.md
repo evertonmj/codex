@@ -7,7 +7,7 @@
 
 ## Overview
 
-Renamed the `codex/internal/` directory to `codex/src/` to better reflect its purpose as the source code directory for the CodexDB internal implementation.
+Renamed the `codex/internal/` directory to `app/` to better reflect its purpose as the source code directory for the CodexDB internal implementation.
 
 ## Changes Made
 
@@ -273,7 +273,7 @@ codex/
 
 ## Conclusion
 
-The refactoring from `codex/internal/` to `codex/src/` has been completed successfully with:
+The refactoring from `codex/internal/` to `app/` has been completed successfully with:
 
 - ✅ **Zero functionality changes**
 - ✅ **Zero test failures**
@@ -281,6 +281,6 @@ The refactoring from `codex/internal/` to `codex/src/` has been completed succes
 - ✅ **Full documentation updates**
 - ✅ **18/18 test packages passing**
 
-The codebase is now using `codex/src/` as the internal source directory, maintaining all functionality, tests, and performance characteristics.
+The codebase is now using `app/` as the internal source directory, maintaining all functionality, tests, and performance characteristics.
 
 **Status**: Ready for production use.

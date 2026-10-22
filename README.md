@@ -1,9 +1,9 @@
 # CodexDB
 
-[![Go Version](https://img.shields.io/badge/go-1.20+-blue.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/go-1.24+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://mozilla.org/MPL/2.0/)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](#)
-[![Test Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)](#)
+[![Test Coverage](https://img.shields.io/badge/coverage-95.2%25-brightgreen.svg)](#)
 
 **CodexDB is a simple, fast, and persistent file-based key-value database for Go, with optional support for encryption, data integrity checks, automatic backups, and an append-only ledger mode.**
 
@@ -148,21 +148,27 @@ All keys: [username score active]
 
 **Encryption (for sensitive data):**
 ```go
-store, err := codex.New("secure.db", codex.WithEncryption("my-secret-key"))
+key := make([]byte, 32) // AES-256; use crypto/rand to generate
+store, err := codex.NewWithOptions("secure.db", codex.Options{
+    EncryptionKey: key,
+})
 ```
 
 **Batch operations (10-50x faster for bulk operations):**
 ```go
-batch := store.Batch()
+batch := store.NewBatch()
 batch.Set("user1", "Alice")
-batch.Set("user2", "Bob") 
+batch.Set("user2", "Bob")
 batch.Set("user3", "Charlie")
-batch.Commit() // All operations applied atomically
+batch.Execute() // All operations applied atomically
 ```
 
 **Compression (reduce file size):**
 ```go
-store, err := codex.New("compressed.db", codex.WithCompression("gzip"))
+store, err := codex.NewWithOptions("compressed.db", codex.Options{
+    Compression:      codex.GzipCompression,
+    CompressionLevel: 6,
+})
 ```
 
 ### Step 5: Try the CLI Tool
@@ -201,8 +207,8 @@ cd examples/06_concurrent_access && go run main.go
 
 ### Prerequisites
 
-- **Go 1.20+** (check with `go version`)
-- **No external dependencies** - uses Go standard library
+- **Go 1.24.4+** (check with `go version`)
+- **Minimal external dependencies** - a small set of vetted modules for compression (Snappy, Zstd); everything else uses the Go standard library
 
 ### Next Steps
 
@@ -390,6 +396,7 @@ if errors.Is(err, codex.ErrInvalidKey) {
 - `codex.ErrLocked` - Database is locked by another process
 - `codex.ErrInvalidKey` - Encryption key has invalid size
 - `codex.ErrCorrupted` - Data integrity check failed
+- `codex.ErrClosed` - Operation attempted on a closed store
 
 ### Working with Complex Types
 
@@ -700,20 +707,24 @@ CodexDB follows a clean, modular architecture:
 
 ```
 github.com/evertonmj/codex/
-├── codex/                      # Main package
+├── app/                        # Main package (codex)
 │   ├── codex.go               # Public API
 │   ├── *_test.go              # Tests
-│   └── src/
-│       ├── storage/           # Persistence strategies
-│       │   ├── snapshot.go    # Snapshot mode
-│       │   └── ledger.go      # Ledger mode
-│       ├── encryption/        # AES-GCM encryption
-│       ├── integrity/         # SHA256 checksums
-│       ├── backup/            # Backup management
-│       ├── errors/            # Custom error types
-│       └── logger/            # Structured logging
+│   ├── storage/               # Persistence strategies
+│   │   ├── snapshot.go        # Snapshot mode
+│   │   └── ledger.go          # Ledger mode
+│   ├── encryption/            # AES-GCM encryption
+│   ├── integrity/             # SHA256 checksums
+│   ├── compression/           # Gzip, Zstd, Snappy
+│   ├── backup/                # Backup management
+│   ├── batch/                 # Batch operations
+│   ├── errors/                # Custom error types
+│   └── logger/                # Structured logging
 ├── cmd/
 │   └── codex-cli/             # Command-line tool
+├── internal/
+│   └── native/                # C ABI shared library support
+├── sdk/                        # Node.js and Python SDKs
 ├── examples/                   # Usage examples
 │   ├── 01_basic_usage/
 │   ├── 02_complex_data/
@@ -965,40 +976,42 @@ The coverage gate measures `app/...`, `internal/native` and `cmd/codex-shared`, 
 
 ```bash
 # Test specific package
-go test ./codex
-go test ./codex/src/encryption
-go test ./codex/src/storage
+go test ./app
+go test ./app/encryption
+go test ./app/storage
 
 # Run specific test
-go test ./codex -run TestSetAndGet
+go test ./app -run TestSetAndGet
 ```
 
 ### Integration Tests
 
 ```bash
 # Run integration tests
-go test ./codex -run TestIntegration
+go test ./tests -run TestIntegration
 
 # Run specific integration test
-go test ./codex -run TestIntegration_Encryption
+go test ./tests -run TestIntegration_Encryption
 ```
 
 ### Current Coverage
 
-The embedded Go library reached **96.4% statement coverage**, and the native Node.js wrapper reached **100% line, branch and function coverage** in local verification on Linux amd64. Run the commands above to refresh these results for your checkout.
+The embedded Go library reached **95.2% statement coverage** under the `make test-coverage` gate, and the native Node.js wrapper reached **100% line, branch and function coverage** in local verification on Linux amd64. Run the commands above to refresh these results for your checkout.
 
 ## ⚡ Performance
 
-See [PERFORMANCE.md](PERFORMANCE.md) for detailed performance testing guide.
+See [PERFORMANCE.md](docs/PERFORMANCE.md) for detailed performance testing guide.
 
 ### Quick Benchmarks
 
+Benchmarks live behind the `performance` build tag:
+
 ```bash
 # Run all benchmarks
-go test -bench=. -benchmem ./codex
+go test -tags=performance -bench=. -benchmem ./app
 
 # Run specific benchmark
-go test -bench=BenchmarkSet ./codex
+go test -tags=performance -bench=BenchmarkSet ./app
 ```
 
 ### Typical Performance
@@ -1063,7 +1076,7 @@ go test ./...
 go test -cover ./...
 
 # Run benchmarks
-go test -bench=. ./codex
+go test -tags=performance -bench=. ./app
 
 # Build CLI
 go build -o codex-cli ./cmd/codex-cli
@@ -1075,7 +1088,7 @@ This project is licensed under the Mozilla Public License Version 2.0. See the [
 
 ## 🙏 Acknowledgments
 
-- Built with Go standard library only
+- Built with the Go standard library plus a small set of vetted compression modules
 - Inspired by simple, embedded key-value stores
 - Designed for developer productivity and ease of use
 
@@ -1102,7 +1115,6 @@ Future features under consideration:
 - All data is kept in memory (not suitable for datasets larger than available RAM)
 - No built-in query language (simple key-value only)
 - Single-file databases (no sharding)
-- Ledger mode doesn't support encryption (current version)
 - Not designed for distributed/networked access
 
 For use cases requiring these features, consider dedicated database solutions like SQLite, BadgerDB, or PostgreSQL.

@@ -63,7 +63,10 @@ var (
 	ErrInvalidKey = errors.New("invalid encryption key size: must be 16, 24, or 32 bytes")
 
 	// ErrCorrupted is returned when data integrity verification fails.
-	ErrCorrupted = errors.New("data integrity check failed: database may be corrupted")
+	ErrCorrupted = storage.ErrCorrupted
+
+	// ErrClosed is returned when an operation is attempted on a closed store.
+	ErrClosed = errors.New("store is closed")
 )
 
 // CompressionType defines the compression algorithm to use.
@@ -97,6 +100,7 @@ type Store struct {
 	persistMu sync.Mutex // Protects file persist operations to prevent concurrent writes
 	storer    storage.Storer
 	options   Options
+	closed    bool // Guarded by mu; set by Close
 }
 
 // New creates a new key-value store at the specified path with default options.
@@ -189,6 +193,10 @@ func (s *Store) Set(key string, value interface{}) error {
 
 	// Update in-memory data while holding lock (fast in-memory operation)
 	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return ErrClosed
+	}
 	s.data[key] = data
 	s.mu.Unlock()
 
@@ -218,6 +226,10 @@ func (s *Store) Get(key string, value interface{}) error {
 func (s *Store) Delete(key string) error {
 	// Delete from in-memory data while holding lock (fast in-memory operation)
 	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return ErrClosed
+	}
 	delete(s.data, key)
 	s.mu.Unlock()
 
@@ -233,6 +245,10 @@ func (s *Store) Delete(key string) error {
 func (s *Store) Clear() error {
 	// Clear in-memory data while holding lock (fast in-memory operation)
 	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return ErrClosed
+	}
 	s.data = make(map[string][]byte)
 	s.mu.Unlock()
 
@@ -262,10 +278,23 @@ func (s *Store) Keys() []string {
 	return keys
 }
 
-// Close closes the store.
+// Close closes the store. It waits for any in-flight write to finish
+// persisting before releasing the file lock, so no write is still in
+// progress when the process lock is dropped. Operations attempted after
+// Close return ErrClosed.
 func (s *Store) Close() error {
 	s.mu.Lock()
-	defer s.mu.Unlock()
+	if s.closed {
+		s.mu.Unlock()
+		return nil
+	}
+	s.closed = true
+	s.mu.Unlock()
+
+	// Wait for any in-flight persist to finish before releasing the
+	// process lock and closing the underlying storage.
+	s.persistMu.Lock()
+	defer s.persistMu.Unlock()
 	return s.storer.Close()
 }
 
@@ -274,22 +303,30 @@ func (s *Store) Path() string {
 	return s.path
 }
 
-// BatchSet sets multiple key-value pairs atomically
+// BatchSet sets multiple key-value pairs atomically.
+// All values are marshaled before any change is applied, so a marshal
+// failure leaves the store untouched.
 func (s *Store) BatchSet(items map[string]interface{}) error {
-	// Prepare batch operations
+	// Marshal all values first (outside lock) so an error aborts the batch
+	// before anything is applied.
 	b := batch.New()
-	for key, value := range items {
-		b.Set(key, value)
-	}
-
-	// Marshall all values and update in-memory data while holding lock
-	s.mu.Lock()
+	marshaled := make(map[string][]byte, len(items))
 	for key, value := range items {
 		data, err := json.Marshal(value)
 		if err != nil {
-			s.mu.Unlock()
 			return fmt.Errorf("failed to marshal value for key %s: %w", key, err)
 		}
+		marshaled[key] = data
+		b.Set(key, value)
+	}
+
+	// Update in-memory data while holding lock (fast in-memory operation)
+	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return ErrClosed
+	}
+	for key, data := range marshaled {
 		s.data[key] = data
 	}
 	s.mu.Unlock()
@@ -327,6 +364,10 @@ func (s *Store) BatchDelete(keys []string) error {
 
 	// Delete from in-memory data while holding lock
 	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return ErrClosed
+	}
 	for _, key := range keys {
 		delete(s.data, key)
 	}
@@ -362,7 +403,9 @@ func (b *Batch) Delete(key string) *Batch {
 	return b
 }
 
-// Execute executes all operations in the batch atomically
+// Execute executes all operations in the batch atomically.
+// All values are marshaled before any change is applied, so a marshal
+// failure leaves the store untouched.
 func (b *Batch) Execute() error {
 	// Validate batch (outside lock)
 	if err := b.operations.Validate(); err != nil {
@@ -372,23 +415,34 @@ func (b *Batch) Execute() error {
 	// Optimize operations (outside lock)
 	b.operations.OptimizeOperations()
 
-	// Apply all operations to in-memory data while holding lock (fast in-memory operation)
-	b.store.mu.Lock()
-
-	for _, op := range b.operations.Operations() {
-		switch op.Type {
-		case batch.OpSet:
+	// Marshal all values first so a marshal error aborts the batch before
+	// anything is applied.
+	ops := b.operations.Operations()
+	marshaled := make([][]byte, len(ops))
+	for i, op := range ops {
+		if op.Type == batch.OpSet {
 			data, err := json.Marshal(op.Value)
 			if err != nil {
-				b.store.mu.Unlock()
 				return fmt.Errorf("failed to marshal value for key %s: %w", op.Key, err)
 			}
-			b.store.data[op.Key] = data
+			marshaled[i] = data
+		}
+	}
+
+	// Apply all operations to in-memory data while holding lock (fast in-memory operation)
+	b.store.mu.Lock()
+	if b.store.closed {
+		b.store.mu.Unlock()
+		return ErrClosed
+	}
+	for i, op := range ops {
+		switch op.Type {
+		case batch.OpSet:
+			b.store.data[op.Key] = marshaled[i]
 		case batch.OpDelete:
 			delete(b.store.data, op.Key)
 		}
 	}
-
 	b.store.mu.Unlock()
 
 	// Persist batch without lock (slow I/O operation)
@@ -405,24 +459,9 @@ func (b *Batch) Size() int {
 func (s *Store) persist(req storage.PersistRequest) error {
 	// For snapshot mode, handle backups first (before acquiring persistMu)
 	// Backups have their own synchronization and should not block other writers
-	if !s.options.LedgerMode {
-		// Data should already be in req.Data from caller
-		// If not provided (backward compat), copy current data while holding lock
-		if req.Data == nil {
-			s.mu.RLock()
-			// Copy data to ensure consistency (storage layer may access it slowly)
-			req.Data = make(map[string][]byte, len(s.data))
-			for k, v := range s.data {
-				req.Data[k] = v
-			}
-			s.mu.RUnlock()
-		}
-
-		// Create backups (has its own mutex, runs independently)
-		if s.options.NumBackups > 0 {
-			if err := backup.Create(s.path, s.options.NumBackups); err != nil {
-				return err
-			}
+	if !s.options.LedgerMode && s.options.NumBackups > 0 {
+		if err := backup.Create(s.path, s.options.NumBackups); err != nil {
+			return err
 		}
 	}
 
@@ -431,6 +470,19 @@ func (s *Store) persist(req storage.PersistRequest) error {
 	// but serializes the main data file write since storage layer requires exclusive access
 	s.persistMu.Lock()
 	defer s.persistMu.Unlock()
+
+	if !s.options.LedgerMode && req.Data == nil {
+		// Copy the data while holding persistMu so the snapshot written to
+		// disk always reflects the newest in-memory state. Copying before
+		// acquiring persistMu would let a slow writer overwrite a newer
+		// snapshot with a stale copy, silently dropping keys on disk.
+		s.mu.RLock()
+		req.Data = make(map[string][]byte, len(s.data))
+		for k, v := range s.data {
+			req.Data[k] = v
+		}
+		s.mu.RUnlock()
+	}
 
 	return s.storer.Persist(req)
 }
@@ -464,18 +516,8 @@ func (s *Store) persistBatch(b *batch.Batch) error {
 		reqs = append(reqs, req)
 	}
 
-	// For snapshot mode, handle data and backups before acquiring persistMu
+	// For snapshot mode, handle backups before acquiring persistMu
 	if !s.options.LedgerMode {
-		if len(reqs) > 0 {
-			// Hold read lock and copy data to prevent race conditions
-			s.mu.RLock()
-			reqs[len(reqs)-1].Data = make(map[string][]byte, len(s.data))
-			for k, v := range s.data {
-				reqs[len(reqs)-1].Data[k] = v
-			}
-			s.mu.RUnlock()
-		}
-
 		// Create backup (has its own mutex, runs independently)
 		if s.options.NumBackups > 0 {
 			if err := backup.Create(s.path, s.options.NumBackups); err != nil {
@@ -487,6 +529,17 @@ func (s *Store) persistBatch(b *batch.Batch) error {
 	// Protect main file I/O operations with persistMu
 	s.persistMu.Lock()
 	defer s.persistMu.Unlock()
+
+	if !s.options.LedgerMode && len(reqs) > 0 {
+		// Copy the final data while holding persistMu so the snapshot on
+		// disk always reflects the newest in-memory state (see persist).
+		s.mu.RLock()
+		reqs[len(reqs)-1].Data = make(map[string][]byte, len(s.data))
+		for k, v := range s.data {
+			reqs[len(reqs)-1].Data[k] = v
+		}
+		s.mu.RUnlock()
+	}
 
 	return s.storer.PersistBatch(reqs)
 }

@@ -1,0 +1,21 @@
+name: Native library
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Library coverage (minimum 95%)
+        run: make test-coverage
+      - name: Race detection
+        run: go test -race ./...
+      - name: Compiled Node.js and Python bindings
+        run: make test-native NODE_INCLUDE_DIR="$(node -p "require('path').resolve(process.execPath, '../../include/node')")"

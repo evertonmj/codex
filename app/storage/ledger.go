@@ -72,6 +72,9 @@ func (l *Ledger) Load() (map[string][]byte, error) {
 			break
 		}
 		if readErr != nil {
+			if entryCount == 0 {
+				return nil, fmt.Errorf("failed to read first ledger entry (check encryption key and storage options): %w", readErr)
+			}
 			// Corruption detected - truncate at last valid offset
 			if entryCount > 0 {
 				if err := l.file.Truncate(lastValidOffset); err != nil {

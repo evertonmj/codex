@@ -104,15 +104,15 @@ All critical issues fixed. All tests passing. Safe for production deployment.
 
 ```
 ✅ codex                           23.605s (concurrent tests + performance)
-✅ codex/src/atomic           cached
-✅ codex/src/backup           cached
-✅ codex/src/batch            cached
-✅ codex/src/compression      cached
-✅ codex/src/encryption       cached
-✅ codex/src/errors           cached
-✅ codex/src/integrity        cached
-✅ codex/src/logger           cached
-✅ codex/src/storage          cached
+✅ app/atomic           cached
+✅ app/backup           cached
+✅ app/batch            cached
+✅ app/compression      cached
+✅ app/encryption       cached
+✅ app/errors           cached
+✅ app/integrity        cached
+✅ app/logger           cached
+✅ app/storage          cached
 ✅ examples/01_basic_usage         0.159s
 ✅ examples/02_complex_data        0.153s
 ✅ examples/03_encryption          0.090s
@@ -307,7 +307,7 @@ make purge
 go test -race ./...
 
 # Run concurrency tests
-go test -tags=performance -v ./codex -run ConcurrencyScaling
+go test -tags=performance -v ./app -run ConcurrencyScaling
 ```
 
 ---

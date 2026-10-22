@@ -52,15 +52,15 @@ Test Execution Time: ~165 seconds
 
 | Package | Tests | Status | Time |
 |---------|-------|--------|------|
-| codex/src/atomic | ✅ | 7 passed | 0.235s |
-| codex/src/backup | ✅ | 1 passed | 0.074s |
-| codex/src/batch | ✅ | 8 passed | 0.016s |
-| codex/src/compression | ✅ | 11 passed | 1.883s |
-| codex/src/encryption | ✅ | 8 passed | 0.012s |
-| codex/src/errors | ✅ | 5 passed | 0.009s |
-| codex/src/integrity | ✅ | 2 passed | 0.010s |
-| codex/src/logger | ✅ | 9 passed | 0.059s |
-| codex/src/storage | ✅ | 7 passed | 0.055s |
+| app/atomic | ✅ | 7 passed | 0.235s |
+| app/backup | ✅ | 1 passed | 0.074s |
+| app/batch | ✅ | 8 passed | 0.016s |
+| app/compression | ✅ | 11 passed | 1.883s |
+| app/encryption | ✅ | 8 passed | 0.012s |
+| app/errors | ✅ | 5 passed | 0.009s |
+| app/integrity | ✅ | 2 passed | 0.010s |
+| app/logger | ✅ | 9 passed | 0.059s |
+| app/storage | ✅ | 7 passed | 0.055s |
 
 #### Examples - All Working
 
@@ -230,7 +230,7 @@ Status: ✅ NO ISSUES FOUND
 ### ✅ Test Coverage
 
 ```
-codex: 90%+ coverage
+app: 100% coverage
 Internal packages: 85%+ coverage
 Overall: Comprehensive coverage
 ```

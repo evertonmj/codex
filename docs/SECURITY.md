@@ -104,20 +104,27 @@ func deriveKey(password string, salt []byte) []byte {
 #### Snapshot Mode
 - Checksums are calculated before encryption (defense in depth)
 - Entire database checksum verified on every load
-- Tampering is immediately detected
+- Accidental corruption is immediately detected
 
 #### Ledger Mode (NEW)
 - **Per-entry checksums**: Every ledger entry has its own SHA256 checksum
 - **Graceful recovery**: Corrupted entries are detected and truncated
 - **Data preservation**: Valid entries before corruption are recovered
 - **Automatic repair**: File is truncated at first corrupted entry
+- **Atomic batches**: Batch writes are bracketed by begin/commit markers; a batch torn by a crash is discarded on load
 
-This protects against:
+Checksums protect against accidental corruption:
 - ✅ Bit flips from hardware errors
 - ✅ Corruption during storage or mid-write crashes
-- ✅ Malicious tampering
 - ✅ Truncation or deletion
 - ✅ Partial writes from power loss
+
+**⚠️ IMPORTANT — checksums vs. tampering:** The checksum is stored next to
+the data, so an attacker who can edit the file can also recompute the
+checksum. Checksums alone do **not** protect against malicious tampering.
+Tamper protection requires enabling **AES-GCM encryption**
+(`Options.EncryptionKey`): GCM is authenticated encryption, so any
+modification of the ciphertext fails decryption and is detected.
 
 Example of corruption recovery in ledger mode:
 
@@ -299,13 +306,13 @@ CodexDB includes security testing:
 go test -race ./...
 
 # Encryption correctness
-go test ./codex/src/encryption -v
+go test ./app/encryption -v
 
 # Integrity check verification
-go test ./codex/src/integrity -v
+go test ./app/integrity -v
 
 # Atomic write correctness
-go test ./codex/src/atomic -v
+go test ./app/atomic -v
 ```
 
 ## Dependencies Security

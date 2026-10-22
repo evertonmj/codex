@@ -44,7 +44,7 @@ go test ./...
 go test -cover ./...
 
 # Benchmarks
-go test -bench=. ./codex
+go test -tags=performance -bench=. ./app
 ```
 
 ## 30-Second Tutorial
@@ -167,19 +167,20 @@ store.Set("secret", "sensitive data")
 
 ```
 github.com/evertonmj/codex/
-├── codex/              # Main package
+├── app/                # Main package (codex) and subpackages
 ├── cmd/codexdb/        # CLI tool
 ├── examples/           # Usage examples
 ├── Makefile            # Build automation
 ├── README.md           # Full documentation
-├── TESTING.md          # Testing guide
-└── PERFORMANCE.md      # Performance guide
+└── docs/
+    ├── TESTING.md      # Testing guide
+    └── PERFORMANCE.md  # Performance guide
 ```
 
 ## Next Steps
 
-1. **Read the [README.md](README.md)** for complete documentation
-2. **Try the [examples](examples/)** to see features in action
+1. **Read the [README.md](../README.md)** for complete documentation
+2. **Try the [examples](../examples/)** to see features in action
 3. **Check [TESTING.md](TESTING.md)** to understand testing
 4. **Review [MAKEFILE.md](MAKEFILE.md)** for all build commands
 5. **See [PERFORMANCE.md](PERFORMANCE.md)** for optimization
@@ -255,7 +256,7 @@ make test-race
 
 ```bash
 # Verify Go version
-go version  # Should be 1.20+
+go version  # Should be 1.24+
 
 # Clean and rebuild
 make clean

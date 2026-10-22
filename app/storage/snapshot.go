@@ -63,7 +63,7 @@ func (s *Snapshot) Load() (map[string][]byte, error) {
 	// Verify checksum and get raw data
 	rawData, err := integrity.Verify(fileData)
 	if err != nil {
-		return nil, fmt.Errorf("integrity verification failed: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrCorrupted, err)
 	}
 
 	var envelope struct {

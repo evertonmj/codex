@@ -5,7 +5,7 @@
 //   - All data is signed with SHA256 checksum before storage
 //   - Checksum is verified on load to detect corruption
 //   - Works with encrypted and unencrypted data
-//   - Detects bit flips, truncation, and modification
+//   - Detects bit flips, truncation, and accidental modification
 //
 // Verification Process:
 //  1. Calculate SHA256 of data
@@ -13,7 +13,13 @@
 //  3. Marshal to JSON and store
 //  4. On load, recalculate checksum and verify match
 //
-// Note: Checksum verification is transparent to the user and happens
+// Note: the checksum is stored alongside the data, so it detects
+// accidental corruption (bit rot, partial writes, truncation) but is not
+// a defense against malicious tampering — an attacker who can modify the
+// file can also recompute the checksum. Protection against tampering
+// requires enabling AES-GCM encryption, which authenticates the data.
+//
+// Checksum verification is transparent to the user and happens
 // automatically during database load.
 package integrity
 

@@ -6,18 +6,28 @@ This project has comprehensive test coverage across all packages, including unit
 
 ## Test Coverage Summary
 
-Current coverage (as of latest run):
+Current coverage (as of latest run, `go test -cover ./app/... ./internal/native ./cmd/codex-shared`):
 
 | Package | Coverage |
 |---------|----------|
-| **codex** | 95.5% |
+| **codex (app)** | 100% |
+| **atomic** | 80.0% |
+| **backup** | 100% |
+| **batch** | 98.1% |
+| **compression** | 86.1% |
+| **encryption** | 85.0% |
 | **errors** | 100% |
-| **logger** | 98.4% |
+| **filelock** | 83.3% |
 | **integrity** | 94.1% |
-| **encryption** | 85% |
-| **storage** | 80.9% |
-| **backup** | 77.8% |
-| **Overall** | **95%+** |
+| **logger** | 100% |
+| **path** | 94.9% |
+| **storage** | 90.9% |
+| **internal/native** | 100% |
+| **cmd/codex-shared** | 100% |
+| **Overall** | **95.2%** |
+
+The enforced gate (`make test-coverage`) measures `app/...`, `internal/native` and
+`cmd/codex-shared` including integration-test coverage, and fails below 95%.
 
 ## Running Tests
 
@@ -38,72 +48,72 @@ go test -cover ./...
 
 ```bash
 # Main package
-go test ./codex
+go test ./app
 
 # Internal packages
-go test ./codex/src/errors
-go test ./codex/src/logger
-go test ./codex/src/encryption
-go test ./codex/src/storage
-go test ./codex/src/integrity
-go test ./codex/src/backup
+go test ./app/errors
+go test ./app/logger
+go test ./app/encryption
+go test ./app/storage
+go test ./app/integrity
+go test ./app/backup
 ```
 
 ### Specific Test Functions
 
 ```bash
 # Run specific test
-go test ./codex -run TestSetAndGet
+go test ./app -run TestSetAndGet
 
 # Run integration tests only
-go test ./codex -run TestIntegration
+go test ./tests -run TestIntegration
 
 # Run unit tests only (exclude integration)
-go test ./codex -run Test -skip Integration
+go test ./app -run Test -skip Integration
 ```
 
 ## Test Types
 
 ### 1. Unit Tests
 
-Location: `codex/codex_test.go` and `codex/src/*/test.go`
+Location: `app/codex_test.go`, `app/regression_test.go`, and `app/<package>/*_test.go`
 
 Test individual functions and methods in isolation:
 
 ```bash
-go test ./codex -run TestNew
-go test ./codex -run TestSetAndGet
-go test ./codex -run TestDelete
+go test ./app -run TestNew
+go test ./app -run TestSetAndGet
+go test ./app -run TestDelete
 ```
 
 ### 2. Integration Tests
 
-Location: `codex/codex_integration_test.go` and `codex/integration_advanced_test.go`
+Location: `tests/codex_integration_test.go` and `tests/integration_advanced_test.go`
 
 Test complete workflows and feature interactions:
 
 ```bash
 # All integration tests
-go test ./codex -run TestIntegration
+go test ./tests -run TestIntegration
 
 # Specific integration tests
-go test ./codex -run TestIntegration_Encryption
-go test ./codex -run TestIntegration_LargeDataset
-go test ./codex -run TestIntegration_ConcurrentAccess
+go test ./tests -run TestIntegration_Encryption
+go test ./tests -run TestIntegration_LargeDataset
+go test ./tests -run TestIntegration_ConcurrentAccess
 ```
 
 ### 3. Performance Tests
 
-Location: `codex/performance_test.go`
+Location: `app/performance_test.go` and `app/performance_high_volume_test.go`
 
 Run separately with build tag:
 
 ```bash
 # Performance test functions
-go test -tags=performance -v ./codex -run Performance
+go test -tags=performance -v ./app -run TestPerformance
 
 # Benchmarks
-go test -bench=. -benchmem ./codex
+go test -tags=performance -bench=. -benchmem ./app
 ```
 
 See [PERFORMANCE.md](PERFORMANCE.md) for detailed performance testing guide.
@@ -127,7 +137,7 @@ go tool cover -func=coverage.out
 
 ```bash
 # Detailed coverage for specific package
-go test ./codex -coverprofile=codex.out
+go test ./app -coverprofile=codex.out
 go tool cover -func=codex.out
 
 # View in browser
@@ -174,7 +184,7 @@ Tests that verify error handling:
 Tests for the custom error system:
 
 ```bash
-go test ./codex/src/errors -v
+go test ./app/errors -v
 ```
 
 Coverage: **100%**
@@ -190,10 +200,10 @@ Features tested:
 Tests for structured logging:
 
 ```bash
-go test ./codex/src/logger -v
+go test ./app/logger -v
 ```
 
-Coverage: **98.4%**
+Coverage: **100%**
 
 Features tested:
 - Log level filtering
@@ -207,10 +217,10 @@ Features tested:
 Tests for AES-GCM encryption:
 
 ```bash
-go test ./codex/src/encryption -v
+go test ./app/encryption -v
 ```
 
-Coverage: **85%**
+Coverage: **85.0%**
 
 Features tested:
 - Different key sizes (AES-128, AES-192, AES-256)
@@ -224,7 +234,7 @@ Features tested:
 Tests for checksum verification:
 
 ```bash
-go test ./codex/src/integrity -v
+go test ./app/integrity -v
 ```
 
 Coverage: **94.1%**
@@ -232,23 +242,25 @@ Coverage: **94.1%**
 Features tested:
 - SHA256 checksum generation
 - Checksum verification
-- Tampering detection
+- Corruption detection
 
 ### 5. Storage Strategies
 
 Tests for snapshot and ledger modes:
 
 ```bash
-go test ./codex/src/storage -v
+go test ./app/storage -v
 ```
 
-Coverage: **80.9%**
+Coverage: **90.9%**
 
 Features tested:
 - Snapshot persistence
 - Ledger append-only mode
 - Operation replay
 - File format handling
+- Corruption recovery and batch commit markers
+- Cross-mode file locking
 
 ## Continuous Integration
 
@@ -279,7 +291,7 @@ steps:
   - name: Install Go
     uses: actions/setup-go@v4
     with:
-      go-version: '1.20'
+      go-version: '1.24'
 
   - name: Run tests
     run: go test -v -cover ./...
@@ -290,7 +302,7 @@ steps:
       go tool cover -func=coverage.out
 
   - name: Run benchmarks
-    run: go test -bench=. -benchmem ./codex
+    run: go test -tags=performance -bench=. -benchmem ./app
 ```
 
 ## Writing New Tests

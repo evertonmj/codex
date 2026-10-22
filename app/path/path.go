@@ -16,6 +16,7 @@ import (
 // The base directory can be overridden via environment variables:
 //   - CODEXDB_DIR: exact directory to store DB files (highest priority)
 //   - XDG_DATA_HOME: uses $XDG_DATA_HOME/codexdb (if set)
+//
 // If name is empty, it uses "codex" as the default name.
 // If a database with the given name already exists, it returns the existing path.
 // Otherwise, it creates a new path with current timestamp and random hash.
